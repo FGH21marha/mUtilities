@@ -1,3 +1,4 @@
+// Written by Martin Halldin (https://github.com/FGH21marha/mUtilities)
 
 // Returns the closest collider in the specified direction.
 public static bool ClosestColliderInDirection(Vector3 position, float radius, Vector3 dir, LayerMask mask, float margin, System.Action<RaycastHit> onCollision)
