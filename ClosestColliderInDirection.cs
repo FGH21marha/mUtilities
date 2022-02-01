@@ -17,7 +17,8 @@ public static bool ClosestColliderInDirection(Vector3 position, float radius, Ve
     //Get the closest collider in range
     foreach (RaycastHit i in hit)
     {
-        if (Vector3.Distance(i.point, position) < ClosestDistance)
+        float dist = Vector3.Distance(i.point, position);
+        if (dist < ClosestDistance && dist < radius * 2)
         {
             ClosestDistance = Vector3.Distance(i.point, position);
             ClosestCollider = i;
@@ -28,9 +29,6 @@ public static bool ClosestColliderInDirection(Vector3 position, float radius, Ve
 
     //Return false if no collider was found;
     if (ClosestCollider.collider == null) return false;
-
-    //Return false if the distance between hit.point and position is greater than the radius
-    if (Vector3.Distance(ClosestCollider.point, position) > radius * 2) return false;
 
     //Get the dot product between a direction and hit.normal
     float dot = Vector3.Dot(ClosestCollider.normal, dir);
