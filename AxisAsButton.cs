@@ -14,7 +14,7 @@ using UnityEditor;
 #region AxisAsButton Struct
 
 //A struct to allow joysticks, thumbsticks or triggers to be used as buttons
-[Serializable] public struct AxisAsButton
+[Serializable] public class AxisAsButton
 {
     public string AxisName; // "Horizontal" or "Vertical" for example
     public float TriggerThreshold; // At what value the axis should trigger a response
