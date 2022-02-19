@@ -17,7 +17,7 @@ using UnityEditor;
 [Serializable] public struct AxisAsButton
 {
     public string AxisName; // "Horizontal" or "Vertical" for example
-    public float TriggerThreshhold; // At what value the axis should return true
+    public float TriggerThreshold; // At what value the axis should return true
 
     public bool Down { get { return axisDown; } } //Axis was pressed this frame
     public bool Up { get { return axisUp; } } //Axis was released this frame
@@ -34,34 +34,46 @@ using UnityEditor;
     bool axisUp; //Axis was released this frame
     bool axisHold; //Axis is being held
 
-    bool AxisValueThisFrame; //The state of this axis this frame
-    bool AxisValueLastFrame; //The state of this axis last frame
+    bool ValueGreaterThisFrame; //The axis greater than threshold this frame
+    bool ValueGreaterLastFrame; //The axis greater than threshold last frame
 
-    //Only returns true when the axis value becomes greater than the threshhold
+    bool ValueSmallerThisFrame; //The axis smaller than threshold this frame
+    bool ValueSmallerLastFrame; //The axis smaller than threshold last frame
+
+    //Manually update axis information
+    public void UpdateAxisVariables()
+    {
+        GetValueDown();
+        GetValueUp();
+        GetAxisHold();
+        GetAxisValue();
+    }
+
+    //Returns true on the frame the axis value becomes greater than the threshhold
     public bool GetAxisDown()
     {
-        GetAxisChanged();
+        GetValueDown();
         return axisDown;
     }
     public bool GetAxisDown(Action onAxisDown)
     {
-        GetAxisChanged();
+        GetValueDown();
 
-        if(axisDown)
+        if (axisDown)
             onAxisDown?.Invoke();
 
         return axisDown;
     }
 
-    //Only returns true when the axis value becomes smaller than the threshhold
+    //Returns true on the frame the axis value becomes smaller than the threshhold
     public bool GetAxisUp()
     {
-        GetAxisChanged();
+        GetValueUp();
         return axisUp;
     }
     public bool GetAxisUp(Action onAxisUp)
     {
-        GetAxisChanged();
+        GetValueUp();
 
         if (axisUp)
             onAxisUp?.Invoke();
@@ -72,9 +84,7 @@ using UnityEditor;
     //Returns true every frame the axis value is greater than the threshhold
     public bool GetAxisHold()
     {
-        GetAxisChanged();
-
-        bool value = Input.GetAxisRaw(AxisName) > TriggerThreshhold;
+        bool value = Input.GetAxisRaw(AxisName) > TriggerThreshold;
 
         axisHold = value;
         onAxisHold?.Invoke(axisHold);
@@ -83,12 +93,11 @@ using UnityEditor;
     }
     public bool GetAxisHold(Action<bool> onAxisHold)
     {
-        GetAxisChanged();
+        bool value = Input.GetAxisRaw(AxisName) > TriggerThreshold;
 
-        bool value = Input.GetAxisRaw(AxisName) > TriggerThreshhold;
-
-        onAxisHold?.Invoke(value);
         axisHold = value;
+        onAxisHold?.Invoke(axisHold);
+        this.onAxisHold?.Invoke(axisHold);
 
         return value;
     }
@@ -96,8 +105,6 @@ using UnityEditor;
     //Returns the current direction of the axis
     public float GetAxisValue()
     {
-        GetAxisChanged();
-
         float value = Input.GetAxisRaw(AxisName);
 
         onAxisValue?.Invoke(value);
@@ -106,58 +113,84 @@ using UnityEditor;
     }
     public float GetAxisValue(Action<float> onAxisValue)
     {
-        GetAxisChanged();
-
         float value = Input.GetAxisRaw(AxisName);
 
         onAxisValue?.Invoke(value);
+        this.onAxisValue?.Invoke(value);
 
         return value;
     }
 
-    //Only returns true on the frame when the axis value changes
-    public bool GetAxisChanged()
+    //Update the current direction of the axis
+    bool GetValueDown()
     {
+        //Reset axis variable
+        axisDown = false;
+
         //Create a temporary bool to store the comparison of the axis last frame and this frame
         bool axisButtonTriggered;
 
         //Create a temporary float to store the current value of the axis this frame
         float axisValue = Input.GetAxisRaw(AxisName);
 
-        //Reset axis variables
-        axisDown = false;
-        axisUp = false;
-
         //Set the current value of the axis
-        AxisValueThisFrame = axisValue > TriggerThreshhold;
+        ValueGreaterThisFrame = axisValue > TriggerThreshold;
 
         //Set our temporary bool to true if the value changed from one frame to the next
-        if (AxisValueLastFrame != AxisValueThisFrame)
+        if (ValueGreaterLastFrame != ValueGreaterThisFrame)
         {
             axisButtonTriggered = true;
+            onAxisChanged?.Invoke();
 
-            //Check the direction of the axis 
-            if(axisValue > TriggerThreshhold)
+            //Check if the axis value is greater than the threshold
+            if (axisValue > TriggerThreshold)
             {
-                //Set axisDown to true if the axis value is greater than the threshold
                 axisDown = true;
                 onAxisDown?.Invoke();
             }
-            else
-            {
-                //Set axisUp to true if the axis value is smaller than the threshold
-                axisUp = true;
-                onAxisUp?.Invoke();
-            }
-
-            onAxisChanged?.Invoke();
         }
 
         //Set our temporary to false if the value remains unchanged
         else axisButtonTriggered = false;
 
         //Store last frames axis for comparison next update
-        AxisValueLastFrame = AxisValueThisFrame;
+        ValueGreaterLastFrame = ValueGreaterThisFrame;
+
+        return axisButtonTriggered;
+    }
+    bool GetValueUp()
+    {
+        //Reset axis variable
+        axisUp = false;
+
+        //Create a temporary bool to store the comparison of the axis last frame and this frame
+        bool axisButtonTriggered;
+
+        //Create a temporary float to store the current value of the axis this frame
+        float axisValue = Input.GetAxisRaw(AxisName);
+
+        //Set the current value of the axis
+        ValueSmallerThisFrame = axisValue > TriggerThreshold;
+
+        //Set our temporary bool to true if the value changed from one frame to the next
+        if (ValueSmallerLastFrame != ValueSmallerThisFrame)
+        {
+            axisButtonTriggered = true;
+            onAxisChanged?.Invoke();
+
+            //Check if the axis value is smaller than the threshold
+            if (axisValue < TriggerThreshold)
+            {
+                axisUp = true;
+                onAxisUp?.Invoke();
+            }
+        }
+
+        //Set our temporary to false if the value remains unchanged
+        else axisButtonTriggered = false;
+
+        //Store last frames axis for comparison next update
+        ValueSmallerLastFrame = ValueSmallerThisFrame;
 
         return axisButtonTriggered;
     }
@@ -178,19 +211,19 @@ public class AxisAsButtonDrawer : PropertyDrawer
         using (new EditorGUI.PropertyScope(position, label, property))
         {
             //Calculate rects
-            var TitleRect = new Rect(position.x, position.y, position.width, 18);
-            var AxisNameRect = new Rect(position.x, position.y + 20, position.width, 18);
-            var TriggerThreshholdRect = new Rect(position.x, position.y + 40, position.width, 18);
+            //var TitleRect = new Rect(position.x, position.y, position.width, 18);
+            var AxisNameRect = new Rect(position.x, position.y, position.width, 18);
+            var TriggerThreshholdRect = new Rect(position.x, position.y + 20, position.width, 18);
 
             //Draw fields
-            EditorGUI.LabelField(TitleRect, label);
-            EditorGUI.PropertyField(AxisNameRect, property.FindPropertyRelative("AxisName"), new GUIContent("Axis"));
-            EditorGUI.PropertyField(TriggerThreshholdRect, property.FindPropertyRelative("TriggerThreshhold"), new GUIContent("Threshold"));
+            //EditorGUI.LabelField(TitleRect, label);
+            EditorGUI.PropertyField(AxisNameRect, property.FindPropertyRelative("AxisName"), new GUIContent(label));
+            EditorGUI.PropertyField(TriggerThreshholdRect, property.FindPropertyRelative("TriggerThreshold"), new GUIContent("Threshold"));
         }
     }
 
     //Set PropertyHeight of AxisAsButton
-    public override float GetPropertyHeight(SerializedProperty property, GUIContent label) => 60f;
+    public override float GetPropertyHeight(SerializedProperty property, GUIContent label) => 40f;
 }
 #endif
 
