@@ -1,12 +1,22 @@
 // Written by Martin Halldin (https://github.com/FGH21marha/mUtilities)
 
+#region Namespaces
+
 using UnityEngine;
 using System;
 
-//A struct to allow triggers or thumbsticks to be used as buttons
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
+
+#endregion
+
+#region AxisAsButton Struct
+
+//A struct to allow joysticks, thumbsticks or triggers to be used as buttons
 [Serializable] public struct AxisAsButton
 {
-    public string AxisButton; // "Horizontal" or "Vertical" for example
+    public string AxisName; // "Horizontal" or "Vertical" for example
     public float TriggerThreshhold; // At what value the axis should return true
 
     public bool Down { get { return axisDown; } } //Axis was pressed this frame
@@ -64,7 +74,7 @@ using System;
     {
         GetAxisChanged();
 
-        bool value = Input.GetAxisRaw(AxisButton) > TriggerThreshhold;
+        bool value = Input.GetAxisRaw(AxisName) > TriggerThreshhold;
 
         axisHold = value;
         onAxisHold?.Invoke(axisHold);
@@ -75,7 +85,7 @@ using System;
     {
         GetAxisChanged();
 
-        bool value = Input.GetAxisRaw(AxisButton) > TriggerThreshhold;
+        bool value = Input.GetAxisRaw(AxisName) > TriggerThreshhold;
 
         onAxisHold?.Invoke(value);
         axisHold = value;
@@ -88,7 +98,7 @@ using System;
     {
         GetAxisChanged();
 
-        float value = Input.GetAxisRaw(AxisButton);
+        float value = Input.GetAxisRaw(AxisName);
 
         onAxisValue?.Invoke(value);
 
@@ -98,7 +108,7 @@ using System;
     {
         GetAxisChanged();
 
-        float value = Input.GetAxisRaw(AxisButton);
+        float value = Input.GetAxisRaw(AxisName);
 
         onAxisValue?.Invoke(value);
 
@@ -112,7 +122,7 @@ using System;
         bool axisButtonTriggered;
 
         //Create a temporary float to store the current value of the axis this frame
-        float axisValue = Input.GetAxisRaw(AxisButton);
+        float axisValue = Input.GetAxisRaw(AxisName);
 
         //Reset axis variables
         axisDown = false;
@@ -152,3 +162,36 @@ using System;
         return axisButtonTriggered;
     }
 }
+
+#endregion
+
+#region Property Drawer
+
+#if UNITY_EDITOR
+[CustomPropertyDrawer(typeof(AxisAsButton))]
+public class AxisAsButtonDrawer : PropertyDrawer
+{
+    //Override OnGUI and populate the inspector with our own fields
+    public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
+    {
+        //Begin new PropertyScope
+        using (new EditorGUI.PropertyScope(position, label, property))
+        {
+            //Calculate rects
+            var TitleRect = new Rect(position.x, position.y, position.width, 18);
+            var AxisNameRect = new Rect(position.x, position.y + 20, position.width, 18);
+            var TriggerThreshholdRect = new Rect(position.x, position.y + 40, position.width, 18);
+
+            //Draw fields
+            EditorGUI.LabelField(TitleRect, label);
+            EditorGUI.PropertyField(AxisNameRect, property.FindPropertyRelative("AxisName"), new GUIContent("Axis"));
+            EditorGUI.PropertyField(TriggerThreshholdRect, property.FindPropertyRelative("TriggerThreshhold"), new GUIContent("Threshold"));
+        }
+    }
+
+    //Set PropertyHeight of AxisAsButton
+    public override float GetPropertyHeight(SerializedProperty property, GUIContent label) => 60f;
+}
+#endif
+
+#endregion
