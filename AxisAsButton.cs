@@ -17,7 +17,7 @@ using UnityEditor;
 [Serializable] public class AxisAsButton
 {
     public string AxisName; // "Horizontal" or "Vertical" for example
-    public float TriggerThreshold; // At what value the axis should trigger a response
+    public float TriggerThreshold; // At what value the axis should return true
 
     public bool Down { get { return axisDown; } } //Axis was pressed this frame
     public bool Up { get { return axisUp; } } //Axis was released this frame
@@ -27,18 +27,18 @@ using UnityEditor;
     public event Action onAxisUp; //Called when the axis is released
     public event Action onAxisChanged; //Called when the axis changes
    
-    public event Action<float> onAxisValue; //Returns the float value of the axis
-    public event Action<bool> onAxisHold; //Returns the bool value of the axis
+    public event Action<float> onAxisValue; //Returns the float value of the axis each frame GetAxisChanged() is called
+    public event Action<bool> onAxisHold; //Returns the bool value of the axis each frame GetAxisChanged() is called
 
     bool axisDown; //Axis was pressed this frame
     bool axisUp; //Axis was released this frame
     bool axisHold; //Axis is being held
 
-    bool ValueGreaterThisFrame; //The axis value is greater than threshold this frame
-    bool ValueGreaterLastFrame; //The axis value was greater than threshold last frame
+    bool ValueGreaterThisFrame; //The axis greater than threshold this frame
+    bool ValueGreaterLastFrame; //The axis greater than threshold last frame
 
-    bool ValueSmallerThisFrame; //The axis value is smaller than threshold this frame
-    bool ValueSmallerLastFrame; //The axis value was smaller than threshold last frame
+    bool ValueSmallerThisFrame; //The axis smaller than threshold this frame
+    bool ValueSmallerLastFrame; //The axis smaller than threshold last frame
 
     //Manually update axis information
     public void UpdateAxisVariables()
@@ -84,7 +84,7 @@ using UnityEditor;
     //Returns true every frame the axis value is greater than the threshhold
     public bool GetAxisHold()
     {
-        bool value = Input.GetAxisRaw(AxisName) > TriggerThreshold;
+        bool value = Mathf.Abs(Input.GetAxisRaw(AxisName)) > TriggerThreshold;
 
         axisHold = value;
         onAxisHold?.Invoke(axisHold);
@@ -93,7 +93,7 @@ using UnityEditor;
     }
     public bool GetAxisHold(Action<bool> onAxisHold)
     {
-        bool value = Input.GetAxisRaw(AxisName) > TriggerThreshold;
+        bool value = Mathf.Abs(Input.GetAxisRaw(AxisName)) > TriggerThreshold;
 
         axisHold = value;
         onAxisHold?.Invoke(axisHold);
@@ -131,7 +131,7 @@ using UnityEditor;
         bool axisButtonTriggered;
 
         //Create a temporary float to store the current value of the axis this frame
-        float axisValue = Input.GetAxisRaw(AxisName);
+        float axisValue = Mathf.Abs(Input.GetAxisRaw(AxisName));
 
         //Set the current value of the axis
         ValueGreaterThisFrame = axisValue > TriggerThreshold;
@@ -167,7 +167,7 @@ using UnityEditor;
         bool axisButtonTriggered;
 
         //Create a temporary float to store the current value of the axis this frame
-        float axisValue = Input.GetAxisRaw(AxisName);
+        float axisValue = Mathf.Abs(Input.GetAxisRaw(AxisName));
 
         //Set the current value of the axis
         ValueSmallerThisFrame = axisValue > TriggerThreshold;
