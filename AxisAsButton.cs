@@ -16,9 +16,11 @@ using UnityEditor;
 //A struct to allow joysticks, thumbsticks or triggers to be used as buttons
 [Serializable] public class AxisAsButton
 {
-    public string AxisName; // "Horizontal" or "Vertical" for example
-    public float TriggerThreshold; // At what value the axis should return true
+    public string AxisName = ""; // "Horizontal" or "Vertical" for example
+    public float TriggerThreshold = 0.1f; // At what value the axis should return true
 
+    public enum KeyPress { Down, Up, Hold }
+    public KeyPress pressType;
     public bool Down { get { return axisDown; } } //Axis was pressed this frame
     public bool Up { get { return axisUp; } } //Axis was released this frame
     public bool Hold { get { return axisHold; } } //Axis is being held
@@ -52,11 +54,15 @@ using UnityEditor;
     //Returns true on the frame the axis value becomes greater than the threshhold
     public bool GetAxisDown()
     {
+        if (AxisName == "") return false;
+
         GetValueDown();
         return axisDown;
     }
     public bool GetAxisDown(Action onAxisDown)
     {
+        if (AxisName == "") return false;
+
         GetValueDown();
 
         if (axisDown)
@@ -68,11 +74,15 @@ using UnityEditor;
     //Returns true on the frame the axis value becomes smaller than the threshhold
     public bool GetAxisUp()
     {
+        if (AxisName == "") return false;
+
         GetValueUp();
         return axisUp;
     }
     public bool GetAxisUp(Action onAxisUp)
     {
+        if (AxisName == "") return false;
+
         GetValueUp();
 
         if (axisUp)
@@ -84,7 +94,9 @@ using UnityEditor;
     //Returns true every frame the axis value is greater than the threshhold
     public bool GetAxisHold()
     {
-        bool value = Mathf.Abs(Input.GetAxisRaw(AxisName)) > TriggerThreshold;
+        if (AxisName == "") return false;
+
+        bool value = GetValueHold();
 
         axisHold = value;
         onAxisHold?.Invoke(axisHold);
@@ -93,7 +105,9 @@ using UnityEditor;
     }
     public bool GetAxisHold(Action<bool> onAxisHold)
     {
-        bool value = Mathf.Abs(Input.GetAxisRaw(AxisName)) > TriggerThreshold;
+        if (AxisName == "") return false;
+
+        bool value = GetValueHold();
 
         axisHold = value;
         onAxisHold?.Invoke(axisHold);
@@ -102,9 +116,58 @@ using UnityEditor;
         return value;
     }
 
+    //Returns the value of the axis based on what keypress type is selected
+    public bool GetAxisAsButton(KeyPress press)
+    {
+        if (AxisName == "") return false;
+
+        switch (press)
+        {
+            case KeyPress.Down:
+                return GetAxisDown();
+
+            case KeyPress.Up:
+                return GetAxisUp();
+
+            case KeyPress.Hold:
+                return GetAxisHold();
+        }
+
+        return false;
+    }
+    public bool GetAxisAsButton(KeyPress press, Action<bool> onAxisAsButton)
+    {
+        if (AxisName == "") return false;
+
+        bool value;
+
+        switch (press)
+        {
+            case KeyPress.Down:
+                value = GetAxisDown();
+                onAxisAsButton?.Invoke(value);
+                return value;
+
+            case KeyPress.Up:
+                value = GetAxisUp();
+                onAxisAsButton?.Invoke(value);
+                return value;
+
+            case KeyPress.Hold:
+                value = GetAxisHold();
+                onAxisAsButton?.Invoke(value);
+                return value;
+
+        }
+
+        return false;
+    }
+
     //Returns the current direction of the axis
     public float GetAxisValue()
     {
+        if (AxisName == "") return 0f;
+
         float value = Input.GetAxisRaw(AxisName);
 
         onAxisValue?.Invoke(value);
@@ -113,6 +176,8 @@ using UnityEditor;
     }
     public float GetAxisValue(Action<float> onAxisValue)
     {
+        if (AxisName == "") return 0f;
+
         float value = Input.GetAxisRaw(AxisName);
 
         onAxisValue?.Invoke(value);
@@ -124,6 +189,9 @@ using UnityEditor;
     //Update the current direction of the axis
     bool GetValueDown()
     {
+        //Return false if AxisName has not been set up
+        if (AxisName == "") return false;
+
         //Reset axis variable
         axisDown = false;
 
@@ -160,6 +228,9 @@ using UnityEditor;
     }
     bool GetValueUp()
     {
+        //Return false if AxisName has not been set up
+        if (AxisName == "") return false;
+
         //Reset axis variable
         axisUp = false;
 
@@ -193,6 +264,13 @@ using UnityEditor;
         ValueSmallerLastFrame = ValueSmallerThisFrame;
 
         return axisButtonTriggered;
+    }
+    bool GetValueHold()
+    {
+        //Return false if AxisName has not been set up
+        if (AxisName == "") return false;
+
+        return Mathf.Abs(Input.GetAxisRaw(AxisName)) > TriggerThreshold;
     }
 }
 
