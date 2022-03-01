@@ -1,4 +1,4 @@
-// Written by Martin Halldin (https://github.com/FGH21marha/mUtilities/mActions)
+// Written by Martin Halldin (https://github.com/FGH21marha/mUtilities/Events/)
 
 using System;
 using System.Linq;
