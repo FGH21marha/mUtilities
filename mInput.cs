@@ -1,4 +1,5 @@
 // Written by Martin Halldin (https://github.com/FGH21marha/mUtilities)
+// NOTE: Requires AxisAsButton.cs (https://github.com/FGH21marha/mUtilities/blob/main/AxisAsButton.cs)
 
 #region Packages
 using UnityEngine;
