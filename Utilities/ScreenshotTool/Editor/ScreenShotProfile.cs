@@ -25,6 +25,7 @@ public class ScreenShotTransform
     public Vector3 rotation;
     public float fov = 85;
     public bool preview;
+    public PreviewCamera previewTexture = new PreviewCamera();
 }
 
 public enum ScreenShotFormat
@@ -36,4 +37,45 @@ public enum ScreenShotFormat
 public class ScreenShotProfileEditor : Editor
 {
     public override void OnInspectorGUI() {}
+}
+
+public class PreviewCamera
+{
+    GameObject previewObject;
+    Camera previewCam;
+    RenderTexture renderTexture;
+
+    public Camera GetCamera() => previewCam;
+
+    public RenderTexture GetTexture() => renderTexture;
+
+    public void UpdateCamera(ScreenShotTransform transform, Rect rect)
+    {
+        if (GameObject.Find("previewCamera"))
+            previewObject = GameObject.Find("previewCamera");
+        else
+            previewObject = new GameObject("previewCamera");
+
+        if(previewCam == null)
+        {
+            if (previewObject.GetComponent<Camera>())
+                previewCam = previewObject.GetComponent<Camera>();
+            else
+                previewCam = previewObject.AddComponent<Camera>();
+        }
+
+        if(renderTexture == null)
+            renderTexture = new RenderTexture(1920,1080,(int)RenderTextureFormat.ARGB32);
+
+        previewCam.rect = rect;
+        previewObject.hideFlags = HideFlags.HideAndDontSave;
+
+        previewCam.transform.position = transform.position;
+        previewCam.transform.eulerAngles = transform.rotation;
+        previewCam.fieldOfView = transform.fov;
+
+        previewCam.targetTexture = renderTexture;
+        previewCam.Render();
+        previewCam.targetTexture = null;
+    }
 }
