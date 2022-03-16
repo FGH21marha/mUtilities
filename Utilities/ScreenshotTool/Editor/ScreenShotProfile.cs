@@ -60,50 +60,7 @@ public class PreviewCamera
 
     public RenderTexture GetTexture() => renderTexture;
 
-    public void GetPreview(ScreenShotTransform transform, Rect rect, int width, int height)
-    {
-        if (GameObject.Find("previewCamera"))
-            previewObject = GameObject.Find("previewCamera");
-        else
-            previewObject = new GameObject("previewCamera");
-
-        if (previewCam == null)
-        {
-            if (previewObject.GetComponent<Camera>())
-                previewCam = previewObject.GetComponent<Camera>();
-            else
-                previewCam = previewObject.AddComponent<Camera>();
-        }
-
-        renderTexture = new RenderTexture(width, height, (int)RenderTextureFormat.ARGB32);
-        previewCam.rect = rect;
-        previewObject.hideFlags = HideFlags.HideAndDontSave;
-
-        switch (transform.screenShotBackground)
-        {
-            case ScreenShotBackground.Solid: previewCam.clearFlags = CameraClearFlags.SolidColor; break;
-            case ScreenShotBackground.Skybox: previewCam.clearFlags = CameraClearFlags.Skybox; break;
-            case ScreenShotBackground.Transparent: previewCam.clearFlags = CameraClearFlags.Depth; break;
-        }
-
-        previewCam.backgroundColor = transform.backgroundColor;
-
-        previewCam.transform.position = transform.position;
-        previewCam.transform.eulerAngles = transform.rotation;
-
-        previewCam.orthographic = transform.ortho;
-
-        if (transform.ortho)
-            previewCam.orthographicSize = transform.orthoSize;
-        else
-            previewCam.fieldOfView = transform.fov;
-
-        previewCam.targetTexture = renderTexture;
-        previewCam.Render();
-        previewCam.targetTexture = null;
-    }
-
-    public void GetFinal(ScreenShotTransform transform, Rect rect, int width, int height)
+    public void GetPicture(ScreenShotTransform transform, Rect rect, int width, int height)
     {
         if (GameObject.Find("previewCamera"))
             previewObject = GameObject.Find("previewCamera");
