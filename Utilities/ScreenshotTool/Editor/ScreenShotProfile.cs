@@ -23,7 +23,13 @@ public class ScreenShotTransform
 {
     public Vector3 position;
     public Vector3 rotation;
+    public bool ortho;
     public float fov = 85;
+    public float orthoSize = 10;
+
+    public ScreenShotBackground screenShotBackground;
+    public Color backgroundColor = new Color(0, 0.75f,1,1);
+
     public bool preview;
     public PreviewCamera previewTexture = new PreviewCamera();
 }
@@ -33,10 +39,15 @@ public enum ScreenShotFormat
     JPG, PNG, TGA
 }
 
+public enum ScreenShotBackground
+{
+    Solid, Skybox, Transparent
+}
+
 [CustomEditor(typeof(ScreenShotProfile))]
 public class ScreenShotProfileEditor : Editor
 {
-    public override void OnInspectorGUI() {}
+    public override void OnInspectorGUI() { }
 }
 
 public class PreviewCamera
@@ -49,14 +60,14 @@ public class PreviewCamera
 
     public RenderTexture GetTexture() => renderTexture;
 
-    public void UpdateCamera(ScreenShotTransform transform, Rect rect)
+    public void GetPreview(ScreenShotTransform transform, Rect rect, int width, int height)
     {
         if (GameObject.Find("previewCamera"))
             previewObject = GameObject.Find("previewCamera");
         else
             previewObject = new GameObject("previewCamera");
 
-        if(previewCam == null)
+        if (previewCam == null)
         {
             if (previewObject.GetComponent<Camera>())
                 previewCam = previewObject.GetComponent<Camera>();
@@ -64,15 +75,71 @@ public class PreviewCamera
                 previewCam = previewObject.AddComponent<Camera>();
         }
 
-        if(renderTexture == null)
-            renderTexture = new RenderTexture(1920,1080,(int)RenderTextureFormat.ARGB32);
-
+        renderTexture = new RenderTexture(width, height, (int)RenderTextureFormat.ARGB32);
         previewCam.rect = rect;
         previewObject.hideFlags = HideFlags.HideAndDontSave;
 
+        switch (transform.screenShotBackground)
+        {
+            case ScreenShotBackground.Solid: previewCam.clearFlags = CameraClearFlags.SolidColor; break;
+            case ScreenShotBackground.Skybox: previewCam.clearFlags = CameraClearFlags.Skybox; break;
+            case ScreenShotBackground.Transparent: previewCam.clearFlags = CameraClearFlags.Depth; break;
+        }
+
+        previewCam.backgroundColor = transform.backgroundColor;
+
         previewCam.transform.position = transform.position;
         previewCam.transform.eulerAngles = transform.rotation;
-        previewCam.fieldOfView = transform.fov;
+
+        previewCam.orthographic = transform.ortho;
+
+        if (transform.ortho)
+            previewCam.orthographicSize = transform.orthoSize;
+        else
+            previewCam.fieldOfView = transform.fov;
+
+        previewCam.targetTexture = renderTexture;
+        previewCam.Render();
+        previewCam.targetTexture = null;
+    }
+
+    public void GetFinal(ScreenShotTransform transform, Rect rect, int width, int height)
+    {
+        if (GameObject.Find("previewCamera"))
+            previewObject = GameObject.Find("previewCamera");
+        else
+            previewObject = new GameObject("previewCamera");
+
+        if (previewCam == null)
+        {
+            if (previewObject.GetComponent<Camera>())
+                previewCam = previewObject.GetComponent<Camera>();
+            else
+                previewCam = previewObject.AddComponent<Camera>();
+        }
+
+        renderTexture = new RenderTexture(width, height, (int)RenderTextureFormat.ARGB32);
+        previewCam.rect = rect;
+        previewObject.hideFlags = HideFlags.HideAndDontSave;
+
+        switch (transform.screenShotBackground)
+        {
+            case ScreenShotBackground.Solid: previewCam.clearFlags = CameraClearFlags.SolidColor; break;
+            case ScreenShotBackground.Skybox: previewCam.clearFlags = CameraClearFlags.Skybox; break;
+            case ScreenShotBackground.Transparent: previewCam.clearFlags = CameraClearFlags.Depth; break;
+        }
+
+        previewCam.backgroundColor = transform.backgroundColor;
+
+        previewCam.transform.position = transform.position;
+        previewCam.transform.eulerAngles = transform.rotation;
+
+        previewCam.orthographic = transform.ortho;
+
+        if (transform.ortho)
+            previewCam.orthographicSize = transform.orthoSize;
+        else
+            previewCam.fieldOfView = transform.fov;
 
         previewCam.targetTexture = renderTexture;
         previewCam.Render();
