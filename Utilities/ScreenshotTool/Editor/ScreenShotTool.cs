@@ -180,7 +180,7 @@ public class ScreenShotTool : EditorWindow
                     GUI.color = Color.white;
 
                     PreviewCamera preview = screen.previewTexture;
-                    preview.GetPreview(screen, new Rect(0, 0, x, y), (int)x, (int)y);
+                    preview.GetPicture(screen, new Rect(0, 0, x, y), (int)x, (int)y);
 
                     GUI.DrawTexture(new Rect(rect.rect.x + 3, rect.rect.y + 3, x, y), preview.GetTexture());
 
@@ -211,7 +211,7 @@ public class ScreenShotTool : EditorWindow
         {
             RenderTexture rt = new RenderTexture(profile.Width, profile.Height, 32);
             Texture2D screenShot = new Texture2D(profile.Width, profile.Height, TextureFormat.ARGB32, true);
-            screen.previewTexture.GetFinal(screen, new Rect(0, 0, profile.Width, profile.Height), profile.Width, profile.Height);
+            screen.previewTexture.GetPicture(screen, new Rect(0, 0, profile.Width, profile.Height), profile.Width, profile.Height);
             RenderTexture.active = screen.previewTexture.GetTexture();
             screenShot.ReadPixels(new Rect(0, 0, profile.Width, profile.Height), 0, 0);
             screenShot.Apply();
