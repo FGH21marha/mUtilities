@@ -21,6 +21,7 @@ public class ScreenShotProfile : ScriptableObject
 [System.Serializable]
 public class ScreenShotTransform
 {
+    public bool expanded = true;
     public Vector3 position;
     public Vector3 rotation;
     public bool ortho;
