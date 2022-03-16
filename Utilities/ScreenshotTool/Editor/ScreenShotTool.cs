@@ -18,9 +18,6 @@ public class ScreenShotTool : EditorWindow
 
     static Vector2 scrollPos;
 
-    Camera previewCamera;
-    GameObject previewCameraObject;
-
     private void OnGUI()
     {
         profile = (ScreenShotProfile)EditorGUILayout.ObjectField(profile, typeof(ScreenShotProfile), false);
@@ -36,7 +33,7 @@ public class ScreenShotTool : EditorWindow
         if (GUILayout.Button("Select Folder"))
             profile.folder = EditorUtility.OpenFolderPanel("Screenshot Location", "", "");
 
-        if(profile.folder == null || profile.folder == "")
+        if (profile.folder == null || profile.folder == "")
         {
             EditorGUILayout.HelpBox("Please select a screenshot destination folder", MessageType.None);
             return;
@@ -121,27 +118,51 @@ public class ScreenShotTool : EditorWindow
                 GUI.backgroundColor = bgColor;
                 using (new EditorGUILayout.HorizontalScope())
                 {
-                    EditorGUILayout.LabelField("Position", GUILayout.Width(70));
+                    EditorGUILayout.LabelField("Position", GUILayout.Width(80));
                     screen.position = EditorGUILayout.Vector3Field("", screen.position);
                 }
 
                 using (new EditorGUILayout.HorizontalScope())
                 {
-                    EditorGUILayout.LabelField("Rotation", GUILayout.Width(70));
+                    EditorGUILayout.LabelField("Rotation", GUILayout.Width(80));
                     screen.rotation = EditorGUILayout.Vector3Field("", screen.rotation);
                 }
 
                 using (new EditorGUILayout.HorizontalScope())
                 {
-                    EditorGUILayout.LabelField("FOV", GUILayout.Width(70));
-                    screen.fov = EditorGUILayout.Slider(screen.fov, 0.1f, 180f);
+                    EditorGUILayout.LabelField("Orthographic", GUILayout.Width(80));
+                    screen.ortho = EditorGUILayout.Toggle(screen.ortho, GUILayout.Width(20));
+
+                    if (screen.ortho)
+                    {
+                        using (new EditorGUILayout.HorizontalScope())
+                        {
+                            EditorGUILayout.LabelField("Ortho", GUILayout.Width(40));
+                            screen.orthoSize = EditorGUILayout.Slider(screen.orthoSize, 0.1f, 50f);
+                        }
+                    }
+                    else
+                    {
+                        using (new EditorGUILayout.HorizontalScope())
+                        {
+                            EditorGUILayout.LabelField("FOV", GUILayout.Width(40));
+                            screen.fov = EditorGUILayout.Slider(screen.fov, 0.1f, 180f);
+                        }
+                    }
+                }
+
+                using (new EditorGUILayout.HorizontalScope())
+                {
+                    EditorGUILayout.LabelField("Background", GUILayout.Width(80));
+                    screen.screenShotBackground = (ScreenShotBackground)EditorGUILayout.EnumPopup(screen.screenShotBackground);
+                }
+
+                using (new EditorGUILayout.HorizontalScope())
+                {
+                    if (screen.screenShotBackground == ScreenShotBackground.Solid)
+                        screen.backgroundColor = EditorGUILayout.ColorField(screen.backgroundColor);
                 }
             }
-
-            previewCamera.fieldOfView = screen.fov;
-
-            previewCameraObject.transform.position = screen.position;
-            previewCameraObject.transform.eulerAngles = screen.rotation;
 
             screen.preview = EditorGUILayout.Foldout(screen.preview, new GUIContent("Preview"), true);
 
@@ -149,9 +170,8 @@ public class ScreenShotTool : EditorWindow
             {
                 using (var rect = new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
                 {
-                    float x = position.width - 20;
-                    float y = x * profile.Width / profile.Height;
-                    y *= 0.25f;
+                    float y = profile.Width / 10;
+                    float x = y * profile.Width / profile.Height;
 
                     GUILayout.Space(y);
 
@@ -160,10 +180,9 @@ public class ScreenShotTool : EditorWindow
                     GUI.color = Color.white;
 
                     PreviewCamera preview = screen.previewTexture;
-                    preview.UpdateCamera(screen, new Rect(0,0,192,108));
+                    preview.GetPreview(screen, new Rect(0, 0, x, y), (int)x, (int)y);
 
-                    //Handles.DrawCamera(new Rect(rect.rect.x + 3, rect.rect.y + 3, rect.rect.width - 6, y), preview.GetCamera());
-                    GUI.DrawTexture(new Rect(rect.rect.x + 3, rect.rect.y + 3, rect.rect.width - 6, y), preview.GetTexture());
+                    GUI.DrawTexture(new Rect(rect.rect.x + 3, rect.rect.y + 3, x, y), preview.GetTexture());
 
                     GUI.color = c;
                     GUI.backgroundColor = bgColor;
@@ -174,7 +193,7 @@ public class ScreenShotTool : EditorWindow
             {
                 for (int i = 0; i < profile.screenshots.Length; i++)
                 {
-                    if(profile.screenshots[i] == screen)
+                    if (profile.screenshots[i] == screen)
                     {
                         mArray.Remove(ref profile.screenshots, i);
                         break;
@@ -186,28 +205,17 @@ public class ScreenShotTool : EditorWindow
 
     private void TakeScreenshots()
     {
-        GameObject tempCamera = new GameObject("temp");
-        Camera cam = tempCamera.AddComponent<Camera>();
-
         int num = 0;
 
         foreach (var screen in profile.screenshots)
         {
-            tempCamera.transform.position = screen.position;
-            tempCamera.transform.eulerAngles = screen.rotation;
-            cam.fieldOfView = screen.fov;
-
-            RenderTexture rt = new RenderTexture(profile.Width, profile.Height, 16);
-            cam.targetTexture = rt;
-            Texture2D screenShot = new Texture2D(profile.Width, profile.Height, TextureFormat.RGB24, true);
-            cam.Render();
-            RenderTexture.active = rt;
+            RenderTexture rt = new RenderTexture(profile.Width, profile.Height, 32);
+            Texture2D screenShot = new Texture2D(profile.Width, profile.Height, TextureFormat.ARGB32, true);
+            screen.previewTexture.GetFinal(screen, new Rect(0, 0, profile.Width, profile.Height), profile.Width, profile.Height);
+            RenderTexture.active = screen.previewTexture.GetTexture();
             screenShot.ReadPixels(new Rect(0, 0, profile.Width, profile.Height), 0, 0);
             screenShot.Apply();
-
-            cam.targetTexture = null;
             RenderTexture.active = null;
-            DestroyImmediate(rt);
 
             byte[] bytes = null;
 
@@ -235,8 +243,6 @@ public class ScreenShotTool : EditorWindow
             num++;
         }
 
-        DestroyImmediate(tempCamera);
-
         AssetDatabase.Refresh();
     }
 
@@ -255,7 +261,7 @@ public class ScreenShotTool : EditorWindow
     GUIStyle BoldLabel()
     {
         GUIStyle style = new GUIStyle();
-        style.normal.textColor = new Color(1,1,1,0.7f);
+        style.normal.textColor = new Color(1, 1, 1, 0.7f);
         style.fontStyle = FontStyle.Bold;
         style.fontSize = 14;
         style.alignment = TextAnchor.MiddleLeft;
@@ -313,11 +319,11 @@ public class ScreenShotTool : EditorWindow
         RaycastHit hit;
         Physics.Raycast(screen.position, forward, out hit);
 
-        if(hit.collider != null)
+        if (hit.collider != null)
         {
             Handles.color = Color.green;
             Handles.DrawSolidDisc(hit.point + (hit.normal * 0.002f), hit.normal, 0.05f);
-            Handles.color = new Color(0,1,0,0.5f);
+            Handles.color = new Color(0, 1, 0, 0.5f);
             Handles.DrawLine(screen.position, hit.point);
         }
 
@@ -329,7 +335,7 @@ public class ScreenShotTool : EditorWindow
             if (Tools.current == Tool.Move)
                 screen.position = Handles.PositionHandle(screen.position, Quaternion.Euler(screen.rotation));
 
-            if(Tools.current == Tool.Rotate)
+            if (Tools.current == Tool.Rotate)
                 screen.rotation = Handles.RotationHandle(Quaternion.Euler(screen.rotation), screen.position).eulerAngles;
         }
 
