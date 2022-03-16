@@ -20,10 +20,12 @@ public class ScreenShotTool : EditorWindow
 
     private void OnGUI()
     {
+        EditorGUI.BeginChangeCheck();
         profile = (ScreenShotProfile)EditorGUILayout.ObjectField(profile, typeof(ScreenShotProfile), false);
+        if (EditorGUI.EndChangeCheck()) SceneView.RepaintAll();
 
         if (profile == null)
-            return;
+        return;
 
         EditorGUI.BeginChangeCheck();
 
@@ -97,106 +99,111 @@ public class ScreenShotTool : EditorWindow
         using (var scope = new EditorGUILayout.ScrollViewScope(scrollPos))
         {
             scrollPos = scope.scrollPosition;
-            foreach (var screenshot in profile.screenshots)
+            for (int i = 0; i < profile.screenshots.Length; i++)
             {
-                DrawScreenshotElement(screenshot);
+                DrawScreenshotElement(profile.screenshots[i], i);
             }
         }
 
         if (EditorGUI.EndChangeCheck()) EditorUtility.SetDirty(profile);
     }
 
-    private void DrawScreenshotElement(ScreenShotTransform screen)
+    private void DrawScreenshotElement(ScreenShotTransform screen, int index)
     {
         using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
         {
             var bgColor = GUI.backgroundColor;
 
-            GUI.backgroundColor = Color.black;
-            using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
+            screen.expanded = EditorGUILayout.Foldout(screen.expanded, new GUIContent("Camera " + index.ToString()), true);
+
+            if (screen.expanded)
             {
-                GUI.backgroundColor = bgColor;
-                using (new EditorGUILayout.HorizontalScope())
+                GUI.backgroundColor = Color.black;
+                using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
                 {
-                    EditorGUILayout.LabelField("Position", GUILayout.Width(80));
-                    screen.position = EditorGUILayout.Vector3Field("", screen.position);
-                }
-
-                using (new EditorGUILayout.HorizontalScope())
-                {
-                    EditorGUILayout.LabelField("Rotation", GUILayout.Width(80));
-                    screen.rotation = EditorGUILayout.Vector3Field("", screen.rotation);
-                }
-
-                using (new EditorGUILayout.HorizontalScope())
-                {
-                    EditorGUILayout.LabelField("Orthographic", GUILayout.Width(80));
-                    screen.ortho = EditorGUILayout.Toggle(screen.ortho, GUILayout.Width(20));
-
-                    if (screen.ortho)
-                    {
-                        using (new EditorGUILayout.HorizontalScope())
-                        {
-                            EditorGUILayout.LabelField("Ortho", GUILayout.Width(40));
-                            screen.orthoSize = EditorGUILayout.Slider(screen.orthoSize, 0.1f, 50f);
-                        }
-                    }
-                    else
-                    {
-                        using (new EditorGUILayout.HorizontalScope())
-                        {
-                            EditorGUILayout.LabelField("FOV", GUILayout.Width(40));
-                            screen.fov = EditorGUILayout.Slider(screen.fov, 0.1f, 180f);
-                        }
-                    }
-                }
-
-                using (new EditorGUILayout.HorizontalScope())
-                {
-                    EditorGUILayout.LabelField("Background", GUILayout.Width(80));
-                    screen.screenShotBackground = (ScreenShotBackground)EditorGUILayout.EnumPopup(screen.screenShotBackground);
-                }
-
-                using (new EditorGUILayout.HorizontalScope())
-                {
-                    if (screen.screenShotBackground == ScreenShotBackground.Solid)
-                        screen.backgroundColor = EditorGUILayout.ColorField(screen.backgroundColor);
-                }
-            }
-
-            screen.preview = EditorGUILayout.Foldout(screen.preview, new GUIContent("Preview"), true);
-
-            if (screen.preview)
-            {
-                using (var rect = new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
-                {
-                    float y = profile.Width / 10;
-                    float x = y * profile.Width / profile.Height;
-
-                    GUILayout.Space(y);
-
-                    GUI.backgroundColor = Color.white;
-                    var c = GUI.color;
-                    GUI.color = Color.white;
-
-                    PreviewCamera preview = screen.previewTexture;
-                    preview.GetPicture(screen, new Rect(0, 0, x, y), (int)x, (int)y);
-
-                    GUI.DrawTexture(new Rect(rect.rect.x + 3, rect.rect.y + 3, x, y), preview.GetTexture());
-
-                    GUI.color = c;
                     GUI.backgroundColor = bgColor;
-                }
-            }
-
-            if (GUILayout.Button("Delete Camera"))
-            {
-                for (int i = 0; i < profile.screenshots.Length; i++)
-                {
-                    if (profile.screenshots[i] == screen)
+                    using (new EditorGUILayout.HorizontalScope())
                     {
-                        mArray.Remove(ref profile.screenshots, i);
-                        break;
+                        EditorGUILayout.LabelField("Position", GUILayout.Width(80));
+                        screen.position = EditorGUILayout.Vector3Field("", screen.position);
+                    }
+
+                    using (new EditorGUILayout.HorizontalScope())
+                    {
+                        EditorGUILayout.LabelField("Rotation", GUILayout.Width(80));
+                        screen.rotation = EditorGUILayout.Vector3Field("", screen.rotation);
+                    }
+
+                    using (new EditorGUILayout.HorizontalScope())
+                    {
+                        EditorGUILayout.LabelField("Orthographic", GUILayout.Width(80));
+                        screen.ortho = EditorGUILayout.Toggle(screen.ortho, GUILayout.Width(20));
+
+                        if (screen.ortho)
+                        {
+                            using (new EditorGUILayout.HorizontalScope())
+                            {
+                                EditorGUILayout.LabelField("Ortho", GUILayout.Width(40));
+                                screen.orthoSize = EditorGUILayout.Slider(screen.orthoSize, 0.1f, 50f);
+                            }
+                        }
+                        else
+                        {
+                            using (new EditorGUILayout.HorizontalScope())
+                            {
+                                EditorGUILayout.LabelField("FOV", GUILayout.Width(40));
+                                screen.fov = EditorGUILayout.Slider(screen.fov, 0.1f, 180f);
+                            }
+                        }
+                    }
+
+                    using (new EditorGUILayout.HorizontalScope())
+                    {
+                        EditorGUILayout.LabelField("Background", GUILayout.Width(80));
+                        screen.screenShotBackground = (ScreenShotBackground)EditorGUILayout.EnumPopup(screen.screenShotBackground);
+                    }
+
+                    using (new EditorGUILayout.HorizontalScope())
+                    {
+                        if (screen.screenShotBackground == ScreenShotBackground.Solid)
+                            screen.backgroundColor = EditorGUILayout.ColorField(screen.backgroundColor);
+                    }
+                }
+
+                screen.preview = EditorGUILayout.Foldout(screen.preview, new GUIContent("Preview"), true);
+
+                if (screen.preview)
+                {
+                    using (var rect = new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
+                    {
+                        float y = profile.Width / 10;
+                        float x = y * profile.Width / profile.Height;
+
+                        GUILayout.Space(y);
+
+                        GUI.backgroundColor = Color.white;
+                        var c = GUI.color;
+                        GUI.color = Color.white;
+
+                        PreviewCamera preview = screen.previewTexture;
+                        preview.GetPicture(screen, new Rect(0, 0, x, y), (int)x, (int)y);
+
+                        GUI.DrawTexture(new Rect(rect.rect.x + 3, rect.rect.y + 3, x, y), preview.GetTexture());
+
+                        GUI.color = c;
+                        GUI.backgroundColor = bgColor;
+                    }
+                }
+
+                if (GUILayout.Button("Delete Camera"))
+                {
+                    for (int i = 0; i < profile.screenshots.Length; i++)
+                    {
+                        if (profile.screenshots[i] == screen)
+                        {
+                            mArray.Remove(ref profile.screenshots, i);
+                            break;
+                        }
                     }
                 }
             }
@@ -279,13 +286,13 @@ public class ScreenShotTool : EditorWindow
         if (profile == null)
             return;
 
-        foreach (var screenshot in profile.screenshots)
+        for (int i = 0; i < profile.screenshots.Length; i++)
         {
-            DrawScreenshotInScene(sv, screenshot);
+            DrawScreenshotInScene(sv, profile.screenshots[i], i);
         }
     }
 
-    void DrawScreenshotInScene(SceneView sv, ScreenShotTransform screen)
+    void DrawScreenshotInScene(SceneView sv, ScreenShotTransform screen, int i)
     {
         Handles.color = Color.white;
 
@@ -326,6 +333,8 @@ public class ScreenShotTool : EditorWindow
             Handles.color = new Color(0, 1, 0, 0.5f);
             Handles.DrawLine(screen.position, hit.point);
         }
+
+        Handles.Label(screen.position + sv.camera.transform.right, "Camera " + i.ToString());
 
         EditorGUI.BeginChangeCheck();
 
