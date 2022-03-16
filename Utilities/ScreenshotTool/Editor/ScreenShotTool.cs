@@ -10,6 +10,7 @@ public class ScreenShotTool : EditorWindow
     {
         EditorWindow window = (ScreenShotTool)GetWindow(typeof(ScreenShotTool));
         window.minSize = new Vector2(400, 200);
+        window.autoRepaintOnSceneChange = true;
         window.Show();
     }
 
@@ -137,8 +138,6 @@ public class ScreenShotTool : EditorWindow
                 }
             }
 
-            RefreshPreviewCamera();
-
             previewCamera.fieldOfView = screen.fov;
 
             previewCameraObject.transform.position = screen.position;
@@ -155,13 +154,16 @@ public class ScreenShotTool : EditorWindow
                     y *= 0.25f;
 
                     GUILayout.Space(y);
-                    //GUI.Box(new Rect(rect.rect.x + 3, rect.rect.y + 3, x, y), "", previewBG());
 
                     GUI.backgroundColor = Color.white;
                     var c = GUI.color;
                     GUI.color = Color.white;
 
-                    Handles.DrawCamera(new Rect(rect.rect.x + 3, rect.rect.y + 3, x, y), previewCamera, DrawCameraMode.Normal);
+                    PreviewCamera preview = screen.previewTexture;
+                    preview.UpdateCamera(screen, new Rect(0,0,192,108));
+
+                    //Handles.DrawCamera(new Rect(rect.rect.x + 3, rect.rect.y + 3, rect.rect.width - 6, y), preview.GetCamera());
+                    GUI.DrawTexture(new Rect(rect.rect.x + 3, rect.rect.y + 3, rect.rect.width - 6, y), preview.GetTexture());
 
                     GUI.color = c;
                     GUI.backgroundColor = bgColor;
@@ -195,7 +197,7 @@ public class ScreenShotTool : EditorWindow
             tempCamera.transform.eulerAngles = screen.rotation;
             cam.fieldOfView = screen.fov;
 
-            RenderTexture rt = new RenderTexture(profile.Width, profile.Height, 24);
+            RenderTexture rt = new RenderTexture(profile.Width, profile.Height, 16);
             cam.targetTexture = rt;
             Texture2D screenShot = new Texture2D(profile.Width, profile.Height, TextureFormat.RGB24, true);
             cam.Render();
@@ -271,27 +273,10 @@ public class ScreenShotTool : EditorWindow
         if (profile == null)
             return;
 
-        RefreshPreviewCamera();
-
         foreach (var screenshot in profile.screenshots)
         {
             DrawScreenshotInScene(sv, screenshot);
         }
-    }
-
-    private void RefreshPreviewCamera()
-    {
-        if (GameObject.Find("previewObject"))
-            previewCameraObject = GameObject.Find("previewObject");
-        else
-            previewCameraObject = new GameObject("previewObject");
-
-        previewCameraObject.hideFlags = HideFlags.HideInHierarchy;
-
-        if (previewCameraObject.GetComponent<Camera>())
-            previewCamera = previewCameraObject.GetComponent<Camera>();
-        else
-            previewCamera = previewCameraObject.AddComponent<Camera>();
     }
 
     void DrawScreenshotInScene(SceneView sv, ScreenShotTransform screen)
