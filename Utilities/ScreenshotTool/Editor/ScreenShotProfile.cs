@@ -31,7 +31,7 @@ public class ScreenShotTransform
     public ScreenShotBackground screenShotBackground;
     public Color backgroundColor = new Color(0, 0.75f,1,1);
 
-    public bool preview;
+    public bool preview = true;
     public PreviewCamera previewTexture = new PreviewCamera();
 }
 
