@@ -3,3 +3,5 @@ This handly little tool makes it super simple to set up cameras to render screen
 Install:
 1. Clone or download the ScreenshotTool repo and unzip it.
 2. Import the unzipped folder into your unity project
+
+NOTE: this plugin requires mArray and mEditor to function properly, if you do not have these installed either you must do so in order to use this tool.
