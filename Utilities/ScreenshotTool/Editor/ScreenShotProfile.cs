@@ -79,7 +79,7 @@ public class PreviewCamera
 
         renderTexture = new RenderTexture(width, height, (int)RenderTextureFormat.ARGB32);
         previewCam.rect = rect;
-        previewObject.hideFlags = HideFlags.None;
+        previewObject.hideFlags = HideFlags.HideAndDontSave;
 
         switch (transform.screenShotBackground)
         {
@@ -104,8 +104,6 @@ public class PreviewCamera
         previewCam.targetTexture = renderTexture;
         previewCam.Render();
 
-
         RenderTexture.active = null;
-        //previewCam.targetTexture = null;
     }
 }
