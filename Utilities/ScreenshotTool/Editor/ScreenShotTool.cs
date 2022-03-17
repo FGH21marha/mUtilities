@@ -2,10 +2,12 @@
 
 using UnityEditor;
 using UnityEngine;
+using UnityEditor.SceneManagement;
 using UnityEditorInternal;
 
 public class ScreenShotTool : EditorWindow
 {
+    #region Window
     [MenuItem("Screenshot/Open Screenshot window")]
     public static void OpenWindow()
     {
@@ -16,10 +18,8 @@ public class ScreenShotTool : EditorWindow
     }
 
     public ScreenShotProfile profile;
-
-    Vector2 scrollPos;
-
     public ReorderableList cameras;
+    Vector2 scrollPos;
 
     private void OnDestroy()
     {
@@ -28,7 +28,6 @@ public class ScreenShotTool : EditorWindow
 
         SceneView.RepaintAll();
     }
-
     private void OnGUI()
     {
         EditorGUI.BeginChangeCheck();
@@ -242,7 +241,6 @@ public class ScreenShotTool : EditorWindow
             SceneView.RepaintAll();
         }
     }
-
     private void InitializeList()
     {
         cameras = new ReorderableList(profile.screenshots, typeof(ScreenShotTransform), true, true, true, true);
@@ -289,7 +287,6 @@ public class ScreenShotTool : EditorWindow
 
         AssetDatabase.Refresh();
     }
-
     void DrawTitle(string title)
     {
         EditorGUILayout.Space();
@@ -301,7 +298,6 @@ public class ScreenShotTool : EditorWindow
             Handles.DrawLine(new Vector3(pos.rect.x - 4, pos.rect.y), new Vector3(pos.rect.width + 11, pos.rect.y));
         }
     }
-
     GUIStyle BoldLabel()
     {
         GUIStyle style = new GUIStyle();
@@ -312,10 +308,11 @@ public class ScreenShotTool : EditorWindow
         style.contentOffset = Vector3.down * 1;
         return style;
     }
+    #endregion
 
+    #region SceneView
     private void OnEnable() => SceneView.duringSceneGui += OnSceneGUI;
     private void OnDisable() => SceneView.duringSceneGui -= OnSceneGUI;
-
     void OnSceneGUI(SceneView sv)
     {
         if (!sv.drawGizmos) return;
@@ -328,7 +325,6 @@ public class ScreenShotTool : EditorWindow
             DrawScreenshotInScene(sv, profile.screenshots[i], i);
         }
     }
-
     void DrawScreenshotInScene(SceneView sv, ScreenShotTransform screen, int i)
     {
         Handles.color = Color.white;
@@ -394,4 +390,60 @@ public class ScreenShotTool : EditorWindow
             Repaint();
         }
     }
+    #endregion
+
+    #region Cleanup
+    [MenuItem("Screenshot/Cleanup Project")]
+    public static void CleanupProject()
+    {
+        mEditor.ModalWindow(
+            "Cleanup Project", 
+            "This action will find all hidden gameobjects in the scene and remove them", 
+            "Cleanup", 
+            "Cancel", 
+            TryCleanup, 
+            null);
+    }
+    static void TryCleanup()
+    {
+        Debug.Log("Cleanup started...");
+
+        var objects = EditorSceneManager.GetActiveScene().GetRootGameObjects();
+
+        GameObject[] hiddenObjects = new GameObject[0];
+
+        for (int i = 0; i < objects.Length; i++)
+        {
+            if (objects[i].hideFlags != HideFlags.None)
+            {
+                Debug.Log("Found " + objects[i].name + " as hidden");
+                hiddenObjects = hiddenObjects.Add(objects[i]);
+            }
+        }
+
+        if(hiddenObjects.Length > 0)
+        {
+            string names = "";
+
+            for (int i = 0; i < names.Length; i++)
+                names += hiddenObjects[i].name + "\n";
+
+            mEditor.ModalWindow(
+            "Found hidden items",
+            "Do you wish to remove:" + names,
+            "Cleanup",
+            "Cancel",
+            ()=> DeleteHiddenItems(hiddenObjects),
+            null);
+        }
+
+        Debug.Log("Cleanup Finished");
+    }
+
+    static void DeleteHiddenItems(GameObject[] objects)
+    {
+        for (int i = 0; i < objects.Length; i++)
+            DestroyImmediate(objects[i]);
+    }
+    #endregion
 }
