@@ -32,6 +32,7 @@ public class ScreenShotTransform
     public Color backgroundColor = new Color(0, 0.75f,1,1);
 
     public bool preview = true;
+    public Vector2 previewOffset;
     public PreviewCamera previewTexture = new PreviewCamera();
 }
 
