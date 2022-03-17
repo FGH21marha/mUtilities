@@ -118,16 +118,29 @@ public class ScreenShotTool : EditorWindow
         };
         cameras.drawHeaderCallback = (Rect rect) => 
         { 
-            EditorGUI.LabelField(rect, "Cameras", EditorStyles.boldLabel); 
+            EditorGUI.LabelField(new Rect(rect.x, rect.y, 80, rect.height), "Cameras", EditorStyles.boldLabel);
+            EditorGUI.BeginChangeCheck();
+
+            EditorGUI.LabelField(new Rect(rect.width - 188, rect.y, 80, rect.height), "Preview");
+            profile.previewSize = EditorGUI.Slider(new Rect(rect.width - 128, rect.y, 140, rect.height), profile.previewSize, 0.1f, 2f);
+
+            if (EditorGUI.EndChangeCheck())
+            {
+                InitializeList();
+                EditorUtility.SetDirty(profile);
+                SceneView.RepaintAll();
+            }
         };
         cameras.elementHeightCallback = (int index) =>
         {
             ScreenShotTransform screen = profile.screenshots[index];
 
+            float y = profile.Width / 10;
+
             if (screen.expanded && !screen.preview)
                 return 134f;
             if (screen.expanded && screen.preview)
-                return 332f;
+                return 138f + (y * Mathf.Clamp(profile.previewSize, 0, 1));
 
             return 20f;
         };
@@ -143,7 +156,10 @@ public class ScreenShotTool : EditorWindow
             {
                 GUI.backgroundColor = Color.black;
 
-                int height = screen.preview ? 312 : 114;
+                float y = profile.Width / 10;
+                float x = y * profile.Width / profile.Height;
+
+                int height = screen.preview ? 118 + (int)(y * Mathf.Clamp(profile.previewSize, 0, 1)) : 114;
 
                 GUI.Box(new Rect(rect.x, rect.y + 20, rect.width, height), "", EditorStyles.helpBox);     
                 GUI.backgroundColor = bgColor;
@@ -176,22 +192,24 @@ public class ScreenShotTool : EditorWindow
 
                 screen.preview = EditorGUI.Foldout(new Rect(rect.x + 4, rect.y + 114, rect.width, 18), screen.preview, new GUIContent("Preview"), true);
 
-                if (screen.preview)
+                using (var offset = new GUI.ScrollViewScope(new Rect(rect.x + 3, rect.y + 136, rect.width - 10, height - 120), screen.previewOffset, new Rect(rect.x + 3, rect.y + 136, (int)(rect.width - 10) * profile.previewSize, (height - 120) * profile.previewSize)))
                 {
-                    float y = profile.Width / 10;
-                    float x = y * profile.Width / profile.Height;
+                    screen.previewOffset = offset.scrollPosition;
+                    if (screen.preview)
+                    {
 
-                    GUI.backgroundColor = Color.white;
-                    var c = GUI.color;
-                    GUI.color = Color.white;
+                        GUI.backgroundColor = Color.white;
+                        var c = GUI.color;
+                        GUI.color = Color.white;
 
-                    PreviewCamera preview = screen.previewTexture;
-                    preview.GetPicture(screen, new Rect(0, 0, x, y), (int)x, (int)y);
+                        PreviewCamera preview = screen.previewTexture;
+                        preview.GetPicture(screen, new Rect(0, 0, x, y), (int)x, (int)y);
 
-                    GUI.DrawTexture(new Rect(rect.x + 3, rect.y + 136, x, y), preview.GetTexture());
+                        GUI.DrawTexture(new Rect(rect.x + 3, rect.y + 136, x * profile.previewSize, y * profile.previewSize), preview.GetTexture());
 
-                    GUI.color = c;
-                    GUI.backgroundColor = bgColor;
+                        GUI.color = c;
+                        GUI.backgroundColor = bgColor;
+                    }
                 }
             }
         };
