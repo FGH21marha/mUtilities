@@ -218,8 +218,6 @@ public class ScreenShotTool : EditorWindow
 
                         GUI.DrawTexture(new Rect(rect.x + 3, rect.y + 136, x * profile.previewSize, y * profile.previewSize), preview.GetTexture());
 
-                        EditorUtility.UnloadUnusedAssetsImmediate();
-
                         GUI.color = c;
                         GUI.backgroundColor = bgColor;
                     }
@@ -239,6 +237,7 @@ public class ScreenShotTool : EditorWindow
         {
             EditorUtility.SetDirty(profile);
             SceneView.RepaintAll();
+            EditorUtility.UnloadUnusedAssetsImmediate();
         }
     }
     private void InitializeList()
