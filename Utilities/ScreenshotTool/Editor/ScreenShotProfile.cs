@@ -79,7 +79,7 @@ public class PreviewCamera
 
         renderTexture = new RenderTexture(width, height, (int)RenderTextureFormat.ARGB32);
         previewCam.rect = rect;
-        previewObject.hideFlags = HideFlags.HideAndDontSave;
+        previewObject.hideFlags = HideFlags.None;
 
         switch (transform.screenShotBackground)
         {
@@ -88,6 +88,7 @@ public class PreviewCamera
             case ScreenShotBackground.Transparent: previewCam.clearFlags = CameraClearFlags.Depth; break;
         }
 
+        previewCam.cameraType = CameraType.Preview;
         previewCam.backgroundColor = transform.backgroundColor;
 
         previewCam.transform.position = transform.position;
@@ -102,6 +103,9 @@ public class PreviewCamera
 
         previewCam.targetTexture = renderTexture;
         previewCam.Render();
-        previewCam.targetTexture = null;
+
+
+        RenderTexture.active = null;
+        //previewCam.targetTexture = null;
     }
 }
