@@ -21,12 +21,23 @@ public class ScreenShotTool : EditorWindow
 
     public ReorderableList cameras;
 
+    private void OnDestroy()
+    {
+        if (GameObject.Find("previewCamera"))
+            DestroyImmediate(GameObject.Find("previewCamera"));
+
+        SceneView.RepaintAll();
+    }
+
     private void OnGUI()
     {
         EditorGUI.BeginChangeCheck();
         profile = (ScreenShotProfile)EditorGUILayout.ObjectField(profile, typeof(ScreenShotProfile), false);
         if (EditorGUI.EndChangeCheck())
         {
+            if (GameObject.Find("previewCamera"))
+                DestroyImmediate(GameObject.Find("previewCamera"));
+
             SceneView.RepaintAll();
             InitializeList();
         }
@@ -129,6 +140,7 @@ public class ScreenShotTool : EditorWindow
                 InitializeList();
                 EditorUtility.SetDirty(profile);
                 SceneView.RepaintAll();
+                Resources.UnloadUnusedAssets();
             }
         };
         cameras.elementHeightCallback = (int index) =>
@@ -192,11 +204,11 @@ public class ScreenShotTool : EditorWindow
 
                 screen.preview = EditorGUI.Foldout(new Rect(rect.x + 4, rect.y + 114, rect.width, 18), screen.preview, new GUIContent("Preview"), true);
 
-                using (var offset = new GUI.ScrollViewScope(new Rect(rect.x + 3, rect.y + 136, rect.width - 10, height - 120), screen.previewOffset, new Rect(rect.x + 3, rect.y + 136, (int)(rect.width - 10) * profile.previewSize, (height - 120) * profile.previewSize)))
+                if (screen.preview)
                 {
-                    screen.previewOffset = offset.scrollPosition;
-                    if (screen.preview)
+                    using (var offset = new GUI.ScrollViewScope(new Rect(rect.x + 3, rect.y + 136, rect.width - 10, height - 120), screen.previewOffset, new Rect(rect.x + 3, rect.y + 136, (int)(rect.width - 10) * profile.previewSize, (height - 120) * profile.previewSize)))
                     {
+                        screen.previewOffset = offset.scrollPosition;
 
                         GUI.backgroundColor = Color.white;
                         var c = GUI.color;
@@ -206,6 +218,8 @@ public class ScreenShotTool : EditorWindow
                         preview.GetPicture(screen, new Rect(0, 0, x, y), (int)x, (int)y);
 
                         GUI.DrawTexture(new Rect(rect.x + 3, rect.y + 136, x * profile.previewSize, y * profile.previewSize), preview.GetTexture());
+
+                        EditorUtility.UnloadUnusedAssetsImmediate();
 
                         GUI.color = c;
                         GUI.backgroundColor = bgColor;
