@@ -28,6 +28,19 @@ public class ScreenShotTool : EditorWindow
 
         SceneView.RepaintAll();
     }
+
+    private void OnFocus()
+    {
+        SceneView.RepaintAll();
+    }
+    private void OnLostFocus()
+    {
+        if (GameObject.Find("previewCamera"))
+            DestroyImmediate(GameObject.Find("previewCamera"));
+
+        SceneView.RepaintAll();
+        EditorUtility.UnloadUnusedAssetsImmediate();
+    }
     private void OnGUI()
     {
         EditorGUI.BeginChangeCheck();
@@ -44,7 +57,7 @@ public class ScreenShotTool : EditorWindow
         if (profile == null)
             return;
 
-        if(cameras == null)
+        if (cameras == null)
             InitializeList();
 
         EditorGUI.BeginChangeCheck();
@@ -126,8 +139,8 @@ public class ScreenShotTool : EditorWindow
             InitializeList();
             SceneView.RepaintAll();
         };
-        cameras.drawHeaderCallback = (Rect rect) => 
-        { 
+        cameras.drawHeaderCallback = (Rect rect) =>
+        {
             EditorGUI.LabelField(new Rect(rect.x, rect.y, 80, rect.height), "Cameras", EditorStyles.boldLabel);
             EditorGUI.BeginChangeCheck();
 
@@ -172,11 +185,11 @@ public class ScreenShotTool : EditorWindow
 
                 int height = screen.preview ? 118 + (int)(y * Mathf.Clamp(profile.previewSize, 0, 1)) : 114;
 
-                GUI.Box(new Rect(rect.x, rect.y + 20, rect.width, height), "", EditorStyles.helpBox);     
+                GUI.Box(new Rect(rect.x, rect.y + 20, rect.width, height), "", EditorStyles.helpBox);
                 GUI.backgroundColor = bgColor;
 
-                EditorGUI.LabelField(new Rect(rect.x + 4, rect.y + 22, 100, 20),"Position");
-                screen.position = EditorGUI.Vector3Field(new Rect(rect.x + 78, rect.y + 22, rect.width - 80, 20),"", screen.position);
+                EditorGUI.LabelField(new Rect(rect.x + 4, rect.y + 22, 100, 20), "Position");
+                screen.position = EditorGUI.Vector3Field(new Rect(rect.x + 78, rect.y + 22, rect.width - 80, 20), "", screen.position);
 
                 EditorGUI.LabelField(new Rect(rect.x + 4, rect.y + 42, 80, 20), "Rotation");
                 screen.rotation = EditorGUI.Vector3Field(new Rect(rect.x + 78, rect.y + 42, rect.width - 80, 20), "", screen.rotation);
@@ -195,8 +208,8 @@ public class ScreenShotTool : EditorWindow
                     screen.fov = EditorGUI.Slider(new Rect(rect.x + 148, rect.y + 66, rect.width - 150, 20), screen.fov, 0.1f, 180f);
                 }
 
-                EditorGUI.LabelField(new Rect(rect.x + 4, rect.y + 90, 80, 20),"Background");
-                screen.screenShotBackground = (ScreenShotBackground)EditorGUI.EnumPopup(new Rect(rect.x + 94, rect.y + 90, 90, 20),screen.screenShotBackground);
+                EditorGUI.LabelField(new Rect(rect.x + 4, rect.y + 90, 80, 20), "Background");
+                screen.screenShotBackground = (ScreenShotBackground)EditorGUI.EnumPopup(new Rect(rect.x + 94, rect.y + 90, 90, 20), screen.screenShotBackground);
 
                 if (screen.screenShotBackground == ScreenShotBackground.Solid)
                     screen.backgroundColor = EditorGUI.ColorField(new Rect(rect.x + 190, rect.y + 90, rect.width - 192, 18), screen.backgroundColor);
@@ -237,7 +250,6 @@ public class ScreenShotTool : EditorWindow
         {
             EditorUtility.SetDirty(profile);
             SceneView.RepaintAll();
-            EditorUtility.UnloadUnusedAssetsImmediate();
         }
     }
     private void InitializeList()
@@ -312,17 +324,14 @@ public class ScreenShotTool : EditorWindow
     #region SceneView
     private void OnEnable() => SceneView.duringSceneGui += OnSceneGUI;
     private void OnDisable() => SceneView.duringSceneGui -= OnSceneGUI;
+
+    bool HasFocus(SceneView sv) => sv.drawGizmos && (sv.hasFocus || hasFocus);
     void OnSceneGUI(SceneView sv)
     {
-        if (!sv.drawGizmos) return;
-
-        if (profile == null)
-            return;
+        if (!HasFocus(sv) || profile == null) return;
 
         for (int i = 0; i < profile.screenshots.Length; i++)
-        {
             DrawScreenshotInScene(sv, profile.screenshots[i], i);
-        }
     }
     void DrawScreenshotInScene(SceneView sv, ScreenShotTransform screen, int i)
     {
@@ -379,7 +388,9 @@ public class ScreenShotTool : EditorWindow
                 screen.position = Handles.PositionHandle(screen.position, Quaternion.Euler(screen.rotation));
 
             if (Tools.current == Tool.Rotate)
+            {
                 screen.rotation = Handles.RotationHandle(Quaternion.Euler(screen.rotation), screen.position).eulerAngles;
+            }
         }
 
         if (EditorGUI.EndChangeCheck())
@@ -396,11 +407,11 @@ public class ScreenShotTool : EditorWindow
     public static void CleanupProject()
     {
         mEditor.ModalWindow(
-            "Cleanup Project", 
-            "This action will find all hidden gameobjects in the scene and remove them", 
-            "Cleanup", 
-            "Cancel", 
-            TryCleanup, 
+            "Cleanup Project",
+            "This action will find all hidden gameobjects in the scene and remove them",
+            "Cleanup",
+            "Cancel",
+            TryCleanup,
             null);
     }
     static void TryCleanup()
@@ -420,7 +431,7 @@ public class ScreenShotTool : EditorWindow
             }
         }
 
-        if(hiddenObjects.Length > 0)
+        if (hiddenObjects.Length > 0)
         {
             string names = "";
 
@@ -432,7 +443,7 @@ public class ScreenShotTool : EditorWindow
             "Do you wish to remove:" + names,
             "Cleanup",
             "Cancel",
-            ()=> DeleteHiddenItems(hiddenObjects),
+            () => DeleteHiddenItems(hiddenObjects),
             null);
         }
 
