@@ -29,7 +29,7 @@ public class ScreenShotTransform
     public float orthoSize = 10;
 
     public ScreenShotBackground screenShotBackground;
-    public Color backgroundColor = new Color(0, 0.75f,1,1);
+    public Color backgroundColor = new Color(0, 0.75f, 1, 1);
 
     public bool preview = true;
     public Vector2 previewOffset;
@@ -78,18 +78,27 @@ public class PreviewCamera
         }
 
         renderTexture = new RenderTexture(width, height, (int)RenderTextureFormat.ARGB32);
+        renderTexture.depth = 32;
         previewCam.rect = rect;
         previewObject.hideFlags = HideFlags.HideAndDontSave;
 
         switch (transform.screenShotBackground)
         {
-            case ScreenShotBackground.Solid: previewCam.clearFlags = CameraClearFlags.SolidColor; break;
-            case ScreenShotBackground.Skybox: previewCam.clearFlags = CameraClearFlags.Skybox; break;
-            case ScreenShotBackground.Transparent: previewCam.clearFlags = CameraClearFlags.Depth; break;
+            case ScreenShotBackground.Solid:
+                previewCam.cameraType = CameraType.Game;
+                previewCam.clearFlags = CameraClearFlags.SolidColor; 
+                previewCam.backgroundColor = transform.backgroundColor;
+                break;
+            case ScreenShotBackground.Skybox:
+                previewCam.cameraType = CameraType.Game;
+                previewCam.clearFlags = CameraClearFlags.Skybox; 
+                break;
+            case ScreenShotBackground.Transparent:
+                previewCam.cameraType = CameraType.Preview;
+                previewCam.clearFlags = CameraClearFlags.Depth; 
+                break;
         }
 
-        previewCam.cameraType = CameraType.Preview;
-        previewCam.backgroundColor = transform.backgroundColor;
 
         previewCam.transform.position = transform.position;
         previewCam.transform.eulerAngles = transform.rotation;
