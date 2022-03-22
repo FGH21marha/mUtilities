@@ -1,4 +1,4 @@
-// Written by Martin Halldin (https://github.com/FGH21marha/mUtilities)
+// Written by Martin Halldin (https://github.com/FGH21marha/mUtilities/ScreenshotTool)
 
 using UnityEditor;
 using UnityEngine;
