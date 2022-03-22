@@ -1,4 +1,4 @@
-// Written by Martin Halldin (https://github.com/FGH21marha/mUtilities)
+#if UNITY_EDITOR
 
 using System;
 using UnityEditor;
@@ -15,7 +15,7 @@ public static class mEditor
                 option1,
                 null);
 
-        if(state)
+        if (state)
             onOption1?.Invoke();
 
         return 0;
@@ -84,3 +84,5 @@ public static class mEditor
                 option3);
     }
 }
+
+#endif
