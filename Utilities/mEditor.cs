@@ -1,3 +1,5 @@
+// Written by Martin Halldin (https://github.com/FGH21marha/mUtilities)
+
 #if UNITY_EDITOR
 
 using System;
