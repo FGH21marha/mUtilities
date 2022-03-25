@@ -1,5 +1,9 @@
 // Written by Martin Halldin (https://github.com/FGH21marha/mUtilities/Editor)
 
+#if UNITY_EDITOR
+
+using UnityEditor;
+
 public class mEditorTime
 {
     double editorDeltaTime = 0f;
@@ -34,7 +38,7 @@ public class mEditorTime
 
     public mEditorTime Repaint(EditorWindow window, float frameCount)
     {
-        if(framecountCheck > 1f / frameCount)
+        if (framecountCheck > 1f / frameCount)
         {
             framecountCheck = 0f;
             window.Repaint();
@@ -43,3 +47,4 @@ public class mEditorTime
         return this;
     }
 }
+#endif
