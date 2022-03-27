@@ -6,18 +6,19 @@ using UnityEngine;
 [Serializable]
 public class mEditorInput
 {
-    private bool LMDown => Event.current.type == EventType.MouseDown && Event.current.button == 0;
-    private bool LMUp => Event.current.type == EventType.MouseUp && Event.current.button == 0;
+    private Event input;
+    private bool LMDown => input.type == EventType.MouseDown && input.button == 0;
+    private bool LMUp => input.type == EventType.MouseUp && input.button == 0;
     private bool isLMHeld;
     private bool isLMDown;
 
-    private bool RMDown => Event.current.type == EventType.MouseDown && Event.current.button == 1;
-    private bool RMUp => Event.current.type == EventType.MouseUp && Event.current.button == 1;
+    private bool RMDown => input.type == EventType.MouseDown && input.button == 1;
+    private bool RMUp => input.type == EventType.MouseUp && input.button == 1;
     private bool isRMHeld;
     private bool isRMDown;
 
-    private bool SWDown => Event.current.type == EventType.MouseDown && Event.current.button == 2;
-    private bool SWUp => Event.current.type == EventType.MouseUp && Event.current.button == 2;
+    private bool SWDown => input.type == EventType.MouseDown && input.button == 2;
+    private bool SWUp => input.type == EventType.MouseUp && input.button == 2;
     private bool isSWHeld;
     private bool isSWDown;
 
@@ -48,6 +49,9 @@ public class mEditorInput
 
     public void Update()
     {
+        if (input == null)
+            input = Event.current;
+
         #region Left Mouse
         if (LMDown && !isLMHeld)
         {
