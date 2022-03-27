@@ -11,11 +11,16 @@ public class mEditorTime
     float framecountCheck = 0f;
 
     public float time;
-    public double doubleTime;
+    public double timeAsDouble;
     public float deltaTime => (float)editorDeltaTime;
     public double deltaTimeAsDouble => editorDeltaTime;
 
-    public mEditorTime Update()
+    public mEditorTime Update(EditorWindow window, float frameCount)
+    {
+        UpdateTime().Repaint(window, frameCount);
+        return this;
+    }
+    public mEditorTime UpdateTime()
     {
         if (lastTimeSinceStartup == 0f)
             lastTimeSinceStartup = EditorApplication.timeSinceStartup;
@@ -24,18 +29,11 @@ public class mEditorTime
         lastTimeSinceStartup = EditorApplication.timeSinceStartup;
 
         time += deltaTime;
-        doubleTime += deltaTimeAsDouble;
+        timeAsDouble += deltaTimeAsDouble;
         framecountCheck += deltaTime;
 
         return this;
     }
-
-    public mEditorTime Update(EditorWindow window, float frameCount)
-    {
-        Update().Repaint(window, frameCount);
-        return this;
-    }
-
     public mEditorTime Repaint(EditorWindow window, float frameCount)
     {
         if (framecountCheck > 1f / frameCount)
