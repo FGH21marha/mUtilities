@@ -1,19 +1,18 @@
 // Written by Martin Halldin (https://github.com/FGH21marha/mUtilities/Editor)
 
 #if UNITY_EDITOR
-
 using UnityEditor;
 
 public class mEditorTime
 {
-    double editorDeltaTime = 0f;
-    double lastTimeSinceStartup = 0f;
-    float framecountCheck = 0f;
-
     public float time;
     public double timeAsDouble;
     public float deltaTime => (float)editorDeltaTime;
     public double deltaTimeAsDouble => editorDeltaTime;
+
+    double editorDeltaTime = 0f;
+    double lastTimeSinceStartup = 0f;
+    float framecountCheck = 0f;
 
     public mEditorTime Update(EditorWindow window, float frameCount)
     {
