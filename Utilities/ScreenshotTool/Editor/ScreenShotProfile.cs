@@ -1,4 +1,4 @@
-// Written by Martin Halldin (https://github.com/FGH21marha/mUtilities/ScreenshotTool)
+// Written by Martin Halldin (https://github.com/FGH21marha/mUtilities)
 
 using UnityEngine;
 using UnityEditor;
@@ -9,6 +9,8 @@ public class ScreenShotProfile : ScriptableObject
     public string folder;
     public string filename = "New Screenshot";
     public float previewSize = 1f;
+
+    public Vector3 screenshotOrigin;
 
     public int Width = 1920;
     public int Height = 1080;
@@ -27,6 +29,7 @@ public class ScreenShotTransform
     public bool ortho;
     public float fov = 85;
     public float orthoSize = 10;
+    public Vector2 clippingPlanes = new Vector2(0.3f, 1000f);
 
     public ScreenShotBackground screenShotBackground;
     public Color backgroundColor = new Color(0, 0.75f, 1, 1);
@@ -110,6 +113,8 @@ public class PreviewCamera
         else
             previewCam.fieldOfView = transform.fov;
 
+        previewCam.nearClipPlane = transform.clippingPlanes.x;
+        previewCam.farClipPlane = transform.clippingPlanes.y;
         previewCam.targetTexture = renderTexture;
         previewCam.Render();
 
