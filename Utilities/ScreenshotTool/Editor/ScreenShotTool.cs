@@ -1,4 +1,4 @@
-// Written by Martin Halldin (https://github.com/FGH21marha/mUtilities/ScreenshotTool)
+// Written by Martin Halldin (https://github.com/FGH21marha/mUtilities)
 
 using UnityEditor;
 using UnityEngine;
@@ -20,6 +20,7 @@ public class ScreenShotTool : EditorWindow
     public ScreenShotProfile profile;
     public ReorderableList cameras;
     Vector2 scrollPos;
+    bool editingCenter;
 
     private void OnDestroy()
     {
@@ -41,6 +42,7 @@ public class ScreenShotTool : EditorWindow
         SceneView.RepaintAll();
         EditorUtility.UnloadUnusedAssetsImmediate();
     }
+
     private void OnGUI()
     {
         EditorGUI.BeginChangeCheck();
@@ -81,6 +83,26 @@ public class ScreenShotTool : EditorWindow
         using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
         {
             GUI.backgroundColor = bgColor;
+
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                var oldPos = profile.screenshotOrigin;
+                EditorGUILayout.LabelField("position", GUILayout.Width(60));
+                profile.screenshotOrigin = EditorGUILayout.Vector3Field("", profile.screenshotOrigin);
+
+                if (GUI.changed && !editingCenter)
+                {
+                    var newPos = profile.screenshotOrigin;
+                    var delta = oldPos - newPos;
+
+                    foreach (var screens in profile.screenshots)
+                        screens.position -= delta;
+                }
+
+                editingCenter = EditorGUILayout.Toggle(editingCenter, GUILayout.Width(16));
+                EditorGUILayout.LabelField("Edit Center", GUILayout.Width(80));
+            }
+
             using (new EditorGUILayout.HorizontalScope())
             {
                 using (new EditorGUILayout.VerticalScope())
@@ -133,7 +155,9 @@ public class ScreenShotTool : EditorWindow
         };
         cameras.onAddCallback = (ReorderableList list) =>
         {
-            mArray.Add(ref profile.screenshots, new ScreenShotTransform());
+            var i = new ScreenShotTransform();
+            i.position = profile.screenshotOrigin;
+            mArray.Add(ref profile.screenshots, i);
             list.index++;
 
             InitializeList();
@@ -162,9 +186,9 @@ public class ScreenShotTool : EditorWindow
             float y = profile.Width / 10;
 
             if (screen.expanded && !screen.preview)
-                return 134f;
+                return 174f;
             if (screen.expanded && screen.preview)
-                return 138f + (y * Mathf.Clamp(profile.previewSize, 0, 1));
+                return 178f + (y * Mathf.Clamp(profile.previewSize, 0, 1));
 
             return 20f;
         };
@@ -183,42 +207,50 @@ public class ScreenShotTool : EditorWindow
                 float y = profile.Width / 10;
                 float x = y * profile.Width / profile.Height;
 
-                int height = screen.preview ? 118 + (int)(y * Mathf.Clamp(profile.previewSize, 0, 1)) : 114;
+                int height = screen.preview ? 158 + (int)(y * Mathf.Clamp(profile.previewSize, 0, 1)) : 154;
 
                 GUI.Box(new Rect(rect.x, rect.y + 20, rect.width, height), "", EditorStyles.helpBox);
                 GUI.backgroundColor = bgColor;
 
-                EditorGUI.LabelField(new Rect(rect.x + 4, rect.y + 22, 100, 20), "Position");
-                screen.position = EditorGUI.Vector3Field(new Rect(rect.x + 78, rect.y + 22, rect.width - 80, 20), "", screen.position);
+                if(GUI.Button(new Rect(rect.x + 4, rect.y + 22, rect.width, 20), "Paste Scene Camera Values"))
+                {
+                    CopySceneCameraValues(screen);
+                }
 
-                EditorGUI.LabelField(new Rect(rect.x + 4, rect.y + 42, 80, 20), "Rotation");
-                screen.rotation = EditorGUI.Vector3Field(new Rect(rect.x + 78, rect.y + 42, rect.width - 80, 20), "", screen.rotation);
+                EditorGUI.LabelField(new Rect(rect.x + 4, rect.y + 42, 100, 20), "Position");
+                screen.position = EditorGUI.Vector3Field(new Rect(rect.x + 78, rect.y + 42, rect.width - 80, 20), "", screen.position);
 
-                EditorGUI.LabelField(new Rect(rect.x + 4, rect.y + 66, 80, 20), "Ortographic");
-                screen.ortho = EditorGUI.Toggle(new Rect(rect.x + 78, rect.y + 66, 20, 20), screen.ortho);
+                EditorGUI.LabelField(new Rect(rect.x + 4, rect.y + 62, 80, 20), "Rotation");
+                screen.rotation = EditorGUI.Vector3Field(new Rect(rect.x + 78, rect.y + 62, rect.width - 80, 20), "", screen.rotation);
+
+                EditorGUI.LabelField(new Rect(rect.x + 4, rect.y + 86, 80, 20), "Ortographic");
+                screen.ortho = EditorGUI.Toggle(new Rect(rect.x + 78, rect.y + 86, 20, 20), screen.ortho);
 
                 if (screen.ortho)
                 {
-                    EditorGUI.LabelField(new Rect(rect.x + 98, rect.y + 66, 80, 20), "Ortho");
-                    screen.orthoSize = EditorGUI.Slider(new Rect(rect.x + 148, rect.y + 66, rect.width - 150, 20), screen.orthoSize, 0.1f, 50f);
+                    EditorGUI.LabelField(new Rect(rect.x + 98, rect.y + 86, 80, 20), "Ortho");
+                    screen.orthoSize = EditorGUI.Slider(new Rect(rect.x + 148, rect.y + 86, rect.width - 150, 20), screen.orthoSize, 0.1f, 150f);
                 }
                 else
                 {
-                    EditorGUI.LabelField(new Rect(rect.x + 98, rect.y + 66, 80, 20), "FOV");
-                    screen.fov = EditorGUI.Slider(new Rect(rect.x + 148, rect.y + 66, rect.width - 150, 20), screen.fov, 0.1f, 180f);
+                    EditorGUI.LabelField(new Rect(rect.x + 98, rect.y + 86, 80, 20), "FOV");
+                    screen.fov = EditorGUI.Slider(new Rect(rect.x + 148, rect.y + 86, rect.width - 150, 20), screen.fov, 0.1f, 180f);
                 }
 
-                EditorGUI.LabelField(new Rect(rect.x + 4, rect.y + 90, 80, 20), "Background");
-                screen.screenShotBackground = (ScreenShotBackground)EditorGUI.EnumPopup(new Rect(rect.x + 94, rect.y + 90, 90, 20), screen.screenShotBackground);
+                EditorGUI.LabelField(new Rect(rect.x + 4, rect.y + 106, 80, 20), "Camera Planes");
+                screen.clippingPlanes = EditorGUI.Vector2Field(new Rect(rect.x + 94, rect.y + 106, rect.width - 80, 20), "", screen.clippingPlanes);
+
+                EditorGUI.LabelField(new Rect(rect.x + 4, rect.y + 130, 80, 20), "Background");
+                screen.screenShotBackground = (ScreenShotBackground)EditorGUI.EnumPopup(new Rect(rect.x + 94, rect.y + 130, 90, 20), screen.screenShotBackground);
 
                 if (screen.screenShotBackground == ScreenShotBackground.Solid)
-                    screen.backgroundColor = EditorGUI.ColorField(new Rect(rect.x + 190, rect.y + 90, rect.width - 192, 18), screen.backgroundColor);
+                    screen.backgroundColor = EditorGUI.ColorField(new Rect(rect.x + 190, rect.y + 130, rect.width - 192, 18), screen.backgroundColor);
 
-                screen.preview = EditorGUI.Foldout(new Rect(rect.x + 4, rect.y + 114, rect.width, 18), screen.preview, new GUIContent("Preview"), true);
+                screen.preview = EditorGUI.Foldout(new Rect(rect.x + 4, rect.y + 154, rect.width, 18), screen.preview, new GUIContent("Preview"), true);
 
                 if (screen.preview)
                 {
-                    using (var offset = new GUI.ScrollViewScope(new Rect(rect.x + 3, rect.y + 136, rect.width - 10, height - 120), screen.previewOffset, new Rect(rect.x + 3, rect.y + 136, (int)(rect.width - 10) * profile.previewSize, (height - 120) * profile.previewSize)))
+                    using (var offset = new GUI.ScrollViewScope(new Rect(rect.x + 3, rect.y + 176, rect.width - 10, height - 120), screen.previewOffset, new Rect(rect.x + 3, rect.y + 176, (int)(rect.width - 10) * profile.previewSize, (height - 120) * profile.previewSize)))
                     {
                         screen.previewOffset = offset.scrollPosition;
 
@@ -229,7 +261,7 @@ public class ScreenShotTool : EditorWindow
                         PreviewCamera preview = screen.previewTexture;
                         preview.GetPicture(screen, new Rect(0, 0, x, y), (int)x, (int)y);
 
-                        GUI.DrawTexture(new Rect(rect.x + 3, rect.y + 136, x * profile.previewSize, y * profile.previewSize), preview.GetTexture());
+                        GUI.DrawTexture(new Rect(rect.x + 3, rect.y + 176, x * profile.previewSize, y * profile.previewSize), preview.GetTexture());
 
                         GUI.color = c;
                         GUI.backgroundColor = bgColor;
@@ -309,6 +341,23 @@ public class ScreenShotTool : EditorWindow
             Handles.DrawLine(new Vector3(pos.rect.x - 4, pos.rect.y), new Vector3(pos.rect.width + 11, pos.rect.y));
         }
     }
+    private void CopySceneCameraValues(ScreenShotTransform screen)
+    {
+        Camera t = SceneView.lastActiveSceneView.camera;
+        screen.position = t.transform.position;
+        screen.rotation = t.transform.eulerAngles;
+        screen.ortho = t.orthographic;
+        screen.orthoSize = t.orthographicSize;
+        screen.fov = t.fieldOfView;
+        screen.backgroundColor = t.backgroundColor;
+
+        switch (t.clearFlags)
+        {
+            case CameraClearFlags.SolidColor: screen.screenShotBackground = ScreenShotBackground.Solid; break;
+            case CameraClearFlags.Skybox: screen.screenShotBackground = ScreenShotBackground.Skybox; break;
+            case CameraClearFlags.Nothing: screen.screenShotBackground = ScreenShotBackground.Transparent; break;
+        }
+    }
     GUIStyle BoldLabel()
     {
         GUIStyle style = new GUIStyle();
@@ -330,8 +379,28 @@ public class ScreenShotTool : EditorWindow
     {
         if (!HasFocus(sv) || profile == null) return;
 
+        var lastPos = profile.screenshotOrigin;
+        var newPos = Handles.PositionHandle(profile.screenshotOrigin, Quaternion.identity);
+        var delta = lastPos - newPos;
+        profile.screenshotOrigin = newPos;
+
+        var e = Event.current;
+
+        if (e != null)
+        {
+            editingCenter = e.alt;
+        }
+
+        if (Mathf.Abs(delta.magnitude) > 0.001f)
+            Repaint();
+
         for (int i = 0; i < profile.screenshots.Length; i++)
+        {
+            if(!editingCenter)
+                profile.screenshots[i].position -= delta;
+
             DrawScreenshotInScene(sv, profile.screenshots[i], i);
+        }
     }
     void DrawScreenshotInScene(SceneView sv, ScreenShotTransform screen, int i)
     {
@@ -364,6 +433,10 @@ public class ScreenShotTool : EditorWindow
 
         Handles.matrix = Matrix4x4.identity;
 
+        Handles.color = new Color(1,1,1,0.2f);
+        Handles.DrawLine(screen.position, new Vector3(screen.position.x, profile.screenshotOrigin.y, screen.position.z));
+        Handles.DrawLine(profile.screenshotOrigin, new Vector3(screen.position.x, profile.screenshotOrigin.y, screen.position.z));
+
         RaycastHit hit;
         Physics.Raycast(screen.position, forward, out hit);
 
@@ -372,7 +445,8 @@ public class ScreenShotTool : EditorWindow
             Handles.color = Color.green;
             Handles.DrawSolidDisc(hit.point + (hit.normal * 0.002f), hit.normal, 0.05f);
             Handles.color = new Color(0, 1, 0, 0.5f);
-            Handles.DrawLine(screen.position, hit.point);
+            Handles.DrawDottedLine(screen.position, hit.point, 2f);
+            //Handles.DrawLine(screen.position, hit.point);
         }
 
         Handles.Label(screen.position + sv.camera.transform.right, "Camera " + i.ToString());
