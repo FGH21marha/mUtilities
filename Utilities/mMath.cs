@@ -1,48 +1,49 @@
 // Written by Martin Halldin (https://github.com/FGH21marha/mUtilities)
 
+using System.Collections.Generic;
 using UnityEngine;
+using System.Linq;
 
 public static class mMath
 {
-    public static Vector3 Mult(this Vector3 value, Vector3 multiplier)
-    {
-        return new Vector3(value.x * multiplier.x, value.y * multiplier.y, value.z * multiplier.z);
-    }
-    public static Vector3 Div(this Vector3 value, Vector3 divider)
+    public static Vector3 Divide(this Vector3 value, Vector3 divider)
     {
         return new Vector3(value.x / divider.x, value.y / divider.y, value.z / divider.z);
+    }
+    public static Vector3 Round(this Vector3 value)
+    {
+        return new Vector3(Mathf.Round(value.x), Mathf.Round(value.y), Mathf.Round(value.z));
     }
 
     public static Vector2 SetMagnitude(this Vector2 value, float magnitude)
     {
         return value.normalized * magnitude;
     }
-    public static Vector2 LimitMagnitude(this Vector2 value, float limit)
-    {
-        if (value.magnitude >= limit) return value.normalized * limit;
-        else return value;
-    }
     public static Vector3 SetMagnitude(this Vector3 value, float magnitude)
     {
         return value.normalized * magnitude;
     }
-    public static Vector3 LimitMagnitude(this Vector3 value, float limit)
+
+    public static Vector3 Make3D(this Vector2 value)
     {
-        if (value.magnitude >= limit) return value.normalized * limit;
-        else return value;
+        return new Vector3(value.x, 0f, value.y);
+    }
+    public static Vector2 AsVector2(this Vector3 value)
+    {
+        return new Vector2(value.x, value.y);
     }
 
     public static float Remap(this float value, float oldMin, float oldMax, float newMin, float newMax)
     {
-        return Lerp(InverseLerp(value, oldMin, oldMax), newMin, newMax);
+        return Lerp(newMin, newMax, InverseLerp(oldMin, oldMax, value));
     }
-    public static float Lerp(float value, float a, float b)
+    public static float Lerp(float a, float b, float t)
     {
-        return (1 - value) * a + b * value;
+        return (1 - t) * a + b * t;
     }
-    public static float InverseLerp(float value, float a, float b)
+    public static float InverseLerp(float a, float b, float t)
     {
-        return (value - a) / (b - a);
+        return (t - a) / (b - a);
     }
 
     public static float AngleFromVector(this Vector2 value)
@@ -54,13 +55,13 @@ public static class mMath
         return new Vector2(Mathf.Sin(angle), Mathf.Cos(angle));
     }
 
-    public static Vector2 Lerp(this Vector2 value, Vector2 a, Vector2 b, float t)
+    public static Vector2 Lerp(this Vector2 value, Vector2 to, float t)
     {
-        return (1 - t) * a + b * value;
+        return (1 - t) * value + to * t;
     }
-    public static Vector3 Lerp(this Vector3 value, Vector3 a, Vector3 b, float t)
+    public static Vector3 Lerp(this Vector3 value, Vector3 to, float t)
     {
-        return (1 - t) * a + b.Mult(value);
+        return (1 - t) * value + to * t;
     }
 
     public static Vector2 ReplaceX(this Vector2 value, float x)
@@ -161,5 +162,40 @@ public static class mMath
         }
 
         return n;
+    }
+
+    public static bool CheckLayer(Collision collision, LayerMask mask)
+    {
+        return mask == (mask | (1 << collision.gameObject.layer));
+    }
+    public static bool CheckDirection(Vector3 direction, Collision collision, out Vector3 impulse, float accuracy = 0.7f)
+    {
+        List<Vector3> velocities = new List<Vector3>();
+
+        for (int i = 0; i < collision.contactCount; i++)
+        {
+            if (Vector3.Dot(collision.contacts[i].normal, direction) > accuracy)
+                velocities.Add(collision.relativeVelocity);
+        }
+
+        if (velocities.Count > 0)
+        {
+            velocities.Sort((x1, x2) => x1.magnitude.CompareTo(x2.magnitude));
+            impulse = velocities.First();
+            return true;
+        }
+
+        impulse = Vector3.zero;
+        return false;
+    }
+    public static bool CheckDirection(Vector3 direction, Collision collision, float accuracy = 0.7f)
+    {
+        for (int i = 0; i < collision.contactCount; i++)
+        {
+            if (Vector3.Dot(collision.contacts[i].normal, direction) > accuracy)
+                return true;
+        }
+
+         return false;
     }
 }
