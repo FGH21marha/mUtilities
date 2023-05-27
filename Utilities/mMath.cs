@@ -198,4 +198,13 @@ public static class mMath
 
          return false;
     }
+    
+    public static Quaternion Delta(this Quaternion a, Quaternion b)
+    {
+        return b * Quaternion.Inverse(a);
+    }
+    public static Quaternion Add(this Quaternion a, Quaternion b)
+    {
+        return b * a;
+    }
 }
