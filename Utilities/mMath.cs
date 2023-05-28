@@ -55,7 +55,6 @@ public static class mMath
 
 
 
-
     public static float Clamp(this float value, float min, float max)
     {
         if (value <= min)
@@ -79,24 +78,22 @@ public static class mMath
 
 
 
-
     public static float Lerp(float a, float b, float t)
     {
         return (1 - t) * a + b * t;
     }
     public static float InverseLerp(float a, float b, float t)
     {
-        return Lerp(a,b,t).Clamp(a,b);
-    }
+        return (t - a) / (b - a);
+}
     public static float LerpClamped(float a, float b, float t)
     {
-        return (1 - t) * a + b * t;
+        return Lerp(a,b,t).Clamp(a,b);
     }
     public static float InverseLerpClamped(float a, float b, float t)
     {
         return InverseLerp(a, b, t).Clamp(a, b);
     }
-
 
 
 
@@ -163,6 +160,17 @@ public static class mMath
         return new Vector3(value.x, value.y, 0);
     }
 
+
+
+
+    public static Quaternion Delta(this Quaternion a, Quaternion b)
+    {
+        return b * Quaternion.Inverse(a);
+    }
+    public static Quaternion Add(this Quaternion a, Quaternion b)
+    {
+        return b * a;
+    }
 
 
 
@@ -259,17 +267,5 @@ public static class mMath
         }
 
         return false;
-    }
-
-
-
-
-    public static Quaternion Delta(this Quaternion a, Quaternion b)
-    {
-        return b * Quaternion.Inverse(a);
-    }
-    public static Quaternion Add(this Quaternion a, Quaternion b)
-    {
-        return b * a;
     }
 }
