@@ -33,24 +33,79 @@ public static class mMath
         return new Vector2(value.x, value.y);
     }
 
+
+
+
     public static float Remap(this float value, float oldMin, float oldMax, float newMin, float newMax)
     {
         return Lerp(newMin, newMax, InverseLerp(oldMin, oldMax, value));
     }
+    public static float Remap01(this float value, float oldMin, float oldMax)
+    {
+        return InverseLerp(oldMin, oldMax, value);
+    }
+    public static float RemapClamped(this float value, float oldMin, float oldMax, float newMin, float newMax)
+    {
+        return Lerp(newMin, newMax, InverseLerp(oldMin, oldMax, value)).Clamp(newMin, newMax);
+    }
+    public static float Remap01Clamped(this float value, float oldMin, float oldMax)
+    {
+        return InverseLerp(oldMin, oldMax, value).Clamp01();
+    }
+
+
+
+
+    public static float Clamp(this float value, float min, float max)
+    {
+        if (value <= min)
+            return min;
+
+        if (value >= max)
+            return max;
+
+        return value;
+    }
+    public static float Clamp01(this float value)
+    {
+        if (value <= 0f)
+            return 0f;
+
+        if (value >= 1f)
+            return 1f;
+
+        return value;
+    }
+
+
+
+
     public static float Lerp(float a, float b, float t)
     {
         return (1 - t) * a + b * t;
     }
     public static float InverseLerp(float a, float b, float t)
     {
-        return (t - a) / (b - a);
+        return Lerp(a,b,t).Clamp(a,b);
     }
+    public static float LerpClamped(float a, float b, float t)
+    {
+        return (1 - t) * a + b * t;
+    }
+    public static float InverseLerpClamped(float a, float b, float t)
+    {
+        return InverseLerp(a, b, t).Clamp(a, b);
+    }
+
+
+
+
 
     public static float AngleFromVector(this Vector2 value)
     {
         return Mathf.Atan2(value.x, value.y) * Mathf.Rad2Deg;
     }
-    public static Vector2 Vector2FromAngle (this float angle)
+    public static Vector2 Vector2FromAngle(this float angle)
     {
         return new Vector2(Mathf.Sin(angle), Mathf.Cos(angle));
     }
@@ -108,6 +163,10 @@ public static class mMath
         return new Vector3(value.x, value.y, 0);
     }
 
+
+
+
+
     public static bool IsPrime(this float value)
     {
         int val = (int)Mathf.Round(value);
@@ -115,7 +174,7 @@ public static class mMath
         if (val < 2) return false;
 
         for (int i = 2; i <= val.Sqrt(); i++)
-            if(val % i == 0)
+            if (val % i == 0)
                 return false;
 
         return true;
@@ -164,6 +223,9 @@ public static class mMath
         return n;
     }
 
+
+
+
     public static bool CheckLayer(Collision collision, LayerMask mask)
     {
         return mask == (mask | (1 << collision.gameObject.layer));
@@ -196,9 +258,12 @@ public static class mMath
                 return true;
         }
 
-         return false;
+        return false;
     }
-    
+
+
+
+
     public static Quaternion Delta(this Quaternion a, Quaternion b)
     {
         return b * Quaternion.Inverse(a);
