@@ -1,3 +1,5 @@
+// Written by Martin Halldin (https://github.com/FGH21marha/mUtilities)
+
 using System.IO;
 using UnityEngine;
 
