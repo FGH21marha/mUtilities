@@ -5,17 +5,16 @@ using UnityEngine;
 
 public static class MPrefs
 {
-    //Replace this to create a new directory for the specified game
-    private static string GAMENAME => "DEFAULTGAME";
+    private static string GAMENAME => "MYGAME"; //Replace this to create a new directory for the specified game
+    private static string FILETYPE => ".pref"; //Replace this to specify a custom save format
+    private static string FOLDERNAME => "Settings"; //Replace this to set a custom settings folder name
+    private static string DIRECTORY => System.Environment.GetFolderPath(System.Environment.SpecialFolder.MyDocuments); //Replace this to set a custom directory for your preferences
 
-    //Replace "directory" to set a custom config directory
     private static string DATAPATH
     {
         get
         {
-            string directory = System.Environment.GetFolderPath(System.Environment.SpecialFolder.MyDocuments) + "/";
-
-            string path = directory + GAMENAME + "/Settings/";
+            string path = DIRECTORY + "/" + GAMENAME + "/" + FOLDERNAME + "/";
 
             if (!Directory.Exists(path))
                 Directory.CreateDirectory(path);
@@ -47,7 +46,7 @@ public static class MPrefs
     #region Utility
     private static string AsPath(string key)
     {
-        return DATAPATH + key + ".pref";
+        return DATAPATH + key + FILETYPE;
     }
     private static void TryCreateFile(string key)
     {
